@@ -1,0 +1,29 @@
+{
+  "name": "query_sisap_system",
+  "version": "1.0.0",
+  "description": "consulta a base de datos de todos los sisap",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "babel-node": "babel-node --presets=@babel/preset-env",
+    "dev": "nodemon --exec npm run babel-node  -- src/index.js",
+    "start": "babel-node src/index.js",
+    "build": "babel src --out-dir dist"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crypto": "^1.0.1",
+    "dotenv": "^16.1.1",
+    "express": "^4.18.2",
+    "express-handlebars": "^7.1.2",
+    "jsonwebtoken": "^9.0.0",
+    "pg": "^8.11.3",
+    "sequelize": "4.44"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.22.9",
+    "@babel/node": "^7.22.6",
+    "@babel/preset-env": "^7.22.9"
+  }
+}
