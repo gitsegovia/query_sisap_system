@@ -23,8 +23,8 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT cedula_identidad, hn.periodo_desde FROM cnmd06_fichas as f inner join cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103 [condition_ext] order by hn.periodo_desde DESC LIMIT 1`; 
     
-    //const query = await identifiedQuery({sqlQuery, table: 't.'});
-    const checkQuery = 0//Object.values(query).reduce((acc, current) => acc+current.length,0)
+    const query = await identifiedQuery({sqlQuery, table: 't.'});
+    const checkQuery = Object.values(query).reduce((acc, current) => acc+current.length,0)
     
     if(checkQuery>0){
       const current = new Date();
