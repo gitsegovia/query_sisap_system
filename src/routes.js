@@ -48,7 +48,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
         const diffInTime = current.getTime() - date.getTime();
         const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24))
         valid = diffInDays<= VALID_DAYS;
-        beneficiario=query.result_db1[0].deno_cod_secretaria;
+        beneficiario=query.result_db1[0];
         periodo_desde= date;
       }else if(query.result_db2.length>0){
         const date = new Date(query.result_db2[0].periodo_desde);
@@ -56,7 +56,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
         const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24))
         
         valid = diffInDays<= VALID_DAYS;
-        beneficiario=query.result_db2[0].deno_cod_secretaria;
+        beneficiario=query.result_db2[0];
         periodo_desde= date;
         db=2
       }else if(query.result_db3.length>0){
@@ -65,7 +65,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
         const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24))
         
         valid = diffInDays<= VALID_DAYS;
-        beneficiario=query.result_db3[0].deno_cod_secretaria;
+        beneficiario=query.result_db3[0];
         periodo_desde= date;
         db=3
       }else if(query.result_db4.length>0){
@@ -74,7 +74,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
         const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24))
         
         valid = diffInDays<= VALID_DAYS;
-        beneficiario=query.result_db4[0].deno_cod_secretaria;
+        beneficiario=query.result_db4[0];
         periodo_desde= date;
         db=4
       }      
