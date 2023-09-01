@@ -2,6 +2,19 @@ import express from "express";
 import path from "path";
 import unifiedQuery, { identifiedQuery, specificQuery } from './sequelizedb';
 
+function diffYear(date) {
+  const current = new Date();
+  const formatted_date = new Date(date);
+  let year = current.getFullYear() - formatted_date.getFullYear();
+  const month = current.getMonth() - formatted_date.getMonth();
+
+  if (month < 0 || (month === 0 && current.getDate() < formatted_date.getDate())) {
+    year--;
+  }
+
+  return year;
+}
+
 const router = express.Router();
 //Assets
 //router.use('/assets', express.static(path.join(__dirname, '../public/assets')));
@@ -156,9 +169,12 @@ router.get('/carnet/consulta/:cedula?', async (req, res) => {
       }      
     }
 
-    if(valid){            
+    if(valid){ 
+                 
       const result_employee = {
-        beneficiario: beneficiario
+          ...beneficiario,
+          edad: diffYear(beneficiario.fecha_nacimiento),
+          antiguedad: diffYear(beneficiario.fecha_ingreso)
       };
       res.json(result_employee);
       return true;
@@ -178,19 +194,6 @@ router.get('/hoja_vida/consulta/:cedula?', async (req, res) => {
   if(!cedula){
     res.status(404).send('Cedula requerida');
     return false;
-  }
-
-  function diffYear(date) {
-    const current = new Date();
-    const formatted_date = new Date(date);
-    let year = current.getFullYear() - formatted_date.getFullYear();
-    const month = current.getMonth() - formatted_date.getMonth();
-
-    if (month < 0 || (month === 0 && current.getDate() < formatted_date.getDate())) {
-      year--;
-    }
-
-    return year;
   }
 
   try {
