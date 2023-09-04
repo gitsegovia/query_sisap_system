@@ -204,18 +204,23 @@ router.get('/hoja_vida/consulta/:cedula?', async (req, res) => {
     const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
     f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
     f.correo_electronico,
-    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,
-    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,
-    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,
-    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
+    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,    
+    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,    
+    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,    
+    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
     (select denominacion from cugd01_centropoblados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen and cod_centro=f.cod_centropoblado_origen) as deno_contropoblado_nacimiento,
     (select denominacion from cugd01_estados where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion) as deno_estado_habitacion,
     (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion) as deno_municipio_habitacion,
-    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,
+    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,
     (select denominacion from cugd01_centropoblados where cod_republica=f.cod_pais_habitacion and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion and cod_centro=f.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
     (select denominacion from cnmd06_profesiones where cod_profesion=rt.cod_profesion) as profesion,
     (select denominacion from cnmd06_especialidades where cod_profesion=rt.cod_profesion and cod_especialidad=rt.cod_especialidad) as especialidad,
-    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina inner join cnmd06_datos_registro_titulo as rt on rt.cedula=f.cedula_identidad where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
+    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet 
+    FROM v_cnmd06_fichas_2 as f 
+    inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    inner join cnmd06_datos_registro_titulo as rt on rt.cedula=f.cedula_identidad 
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
     
     const query = await identifiedQuery({sqlQuery, table: 'f.'});
     const checkQuery = Object.values(query).reduce((acc, current) => acc+current.length,0)
