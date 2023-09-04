@@ -53,12 +53,14 @@ export async function identifiedQuery({ sqlQuery, table = "" }) {
     const [result_db3] = await sequelizeDB3.query(sqlQuery.replace("[condition_ext]", CONDITION_DB3.replace("cod_dep", `${table}cod_dep`)));
     const [result_db4] = await sequelizeDB4.query(sqlQuery.replace("[condition_ext]", CONDITION_DB4.replace("cod_dep", `${table}cod_dep`)));
 
-    return {
+    const result = {
       result_db1,
       result_db2,
       result_db3,
       result_db4,
     };
+    console.log('resultado', result);
+    return result
   } catch (error) {
     throw new Error(error);
   }

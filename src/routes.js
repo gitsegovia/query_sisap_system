@@ -35,7 +35,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
     let periodo_desde ='';
     let beneficiario= '';
     const CURRENT_YEAR = new Date().getFullYear();
-    const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet, hn.periodo_desde FROM v_cnmd06_fichas_2 as f inner join cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103 [condition_ext] order by hn.periodo_desde DESC LIMIT 1`; 
+    const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet, hn.periodo_desde FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103 [condition_ext] order by hn.periodo_desde DESC LIMIT 1`; 
     
     const query = await identifiedQuery({sqlQuery, table: 't.'});
     const checkQuery = Object.values(query).reduce((acc, current) => acc+current.length,0)
@@ -81,7 +81,7 @@ router.get('/fusamiebg/consulta/:cedula?', async (req, res) => {
     }else{
       const sqlQuery_obrero = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
       f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
-      f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) [condition_ext]`; 
+      f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) [condition_ext]`; 
       const query_obrero = await identifiedQuery({sqlQuery: sqlQuery_obrero, table: 't.'});
       
       const checkQuery = Object.values(query_obrero).reduce((acc, current) => acc+current.length,0)
@@ -147,7 +147,7 @@ router.get('/carnet/consulta/:cedula?', async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
     f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
-    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
+    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
     
     const query = await identifiedQuery({sqlQuery, table: 'f.'});
     const checkQuery = Object.values(query).reduce((acc, current) => acc+current.length,0)
@@ -217,9 +217,9 @@ router.get('/hoja_vida/consulta/:cedula?', async (req, res) => {
     (select denominacion from cnmd06_especialidades where cod_profesion=rt.cod_profesion and cod_especialidad=rt.cod_especialidad) as especialidad,
     f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet 
     FROM v_cnmd06_fichas_2 as f 
-    inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
-    inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
-    inner join cnmd06_datos_registro_titulo as rt on rt.cedula=f.cedula_identidad 
+    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_registro_titulo as rt on rt.cedula=f.cedula_identidad 
     where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
     
     const query = await identifiedQuery({sqlQuery, table: 'f.'});
