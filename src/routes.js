@@ -203,6 +203,8 @@ router.get('/hoja_vida/consulta/:cedula?', async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
     f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
+    f.correo_electronico,
+    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,
     f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f inner join cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo inner join cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
     
     const query = await identifiedQuery({sqlQuery, table: 'f.'});
