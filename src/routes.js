@@ -224,8 +224,9 @@ router.get('/hoja_vida/consulta/:cedula?', async (req, res) => {
     FROM v_cnmd06_fichas_2 as f 
     FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd02_empleados_puestos as ep on ep.cod_puesto=f.cod_puesto
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal=1 and ep.grado=99 [condition_ext]`;
     
     const query = await identifiedQuery({sqlQuery, table: 'f.'});
     const checkQuery = Object.values(query).reduce((acc, current) => acc+current.length,0)
