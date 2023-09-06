@@ -184,7 +184,127 @@ router.get("/carnet/consulta/:cedula?", async (req, res) => {
   }
 });
 
-router.get("/hoja_vida/consulta/:cedula?", async (req, res) => {
+router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
+  const { cod_dep } = req.params;
+
+  if (!cod_dep) {
+    res.status(404).send("Dependencia requerida");
+    return false;
+  }
+
+  try {
+    let db = 1;
+    let beneficiario = [];
+    const CURRENT_YEAR = new Date().getFullYear();
+    const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
+    f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+            WHEN f.estado_civil='S' THEN 'Soltero' 
+            WHEN f.estado_civil='C' THEN 'Casado' 
+            WHEN f.estado_civil='D' THEN 'Divorciado' 
+            ELSE 'Otro'
+          END estado_civil, f.grupo_sanguineo, 
+    f.correo_electronico,
+    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,    
+    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,    
+    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,    
+    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
+    (select denominacion from cugd01_centros_poblados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen and cod_centro=f.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
+    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=f.cod_estado_habitacion) as deno_estado_habitacion,    
+    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion) as deno_municipio_habitacion,    
+    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,    
+    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion and cod_centro=f.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
+    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
+    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
+    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
+    (select devolver_grado_puesto(
+      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
+    FROM v_cnmd06_fichas_2 as f 
+    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
+    where f.cod_dep=${cod_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+
+    const query = await identifiedQuery({ sqlQuery, table: "f." });
+    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        query.result_db1.map(emp => {
+          if(emp.cod_grado_puesto==99){
+            beneficiario.push({
+              ...emp,                
+              edad: diffYear(emp.fecha_nacimiento),
+              antiguedad: diffYear(emp.fecha_ingreso),
+            })
+          }
+        });
+        
+        if (beneficiario.length>0) {
+          db = 1;
+        }
+      } else if (query.result_db2.length > 0) {
+        query.result_db2.map(emp => {
+          if(emp.cod_grado_puesto==99){
+            beneficiario.push({
+              ...emp,                
+              edad: diffYear(emp.fecha_nacimiento),
+              antiguedad: diffYear(emp.fecha_ingreso),
+            })
+          }
+        });
+        
+        if (beneficiario.length>0) {
+          db = 2;
+        }
+      } else if (query.result_db3.length > 0) {
+        query.result_db3.map(emp => {
+          if(emp.cod_grado_puesto==99){
+            beneficiario.push({
+              ...emp,                
+              edad: diffYear(emp.fecha_nacimiento),
+              antiguedad: diffYear(emp.fecha_ingreso),
+            })
+          }
+        });
+        
+        if (beneficiario.length>0) {
+          db = 3;
+        }
+      } else if (query.result_db4.length > 0) {
+        query.result_db4.map(emp => {
+          if(emp.cod_grado_puesto==99){
+            beneficiario.push({
+              ...emp,                
+              edad: diffYear(emp.fecha_nacimiento),
+              antiguedad: diffYear(emp.fecha_ingreso),
+            })
+          }
+        });
+        
+        if (beneficiario.length>0) {
+          db = 4;
+        }
+      }
+    }
+
+    if (beneficiario.length>0) {
+      const result_employee = {
+        ...beneficiario,
+        edad: diffYear(beneficiario.fecha_nacimiento),
+        antiguedad: diffYear(beneficiario.fecha_ingreso),
+      };
+      res.json(result_employee);
+      return true;
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+      return false;
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
+router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
   const { cedula } = req.params;
 
   if (!cedula) {
@@ -198,7 +318,7 @@ router.get("/hoja_vida/consulta/:cedula?", async (req, res) => {
     let beneficiario = "";
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
-    f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+    f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
             WHEN f.estado_civil='S' THEN 'Soltero' 
             WHEN f.estado_civil='C' THEN 'Casado' 
             WHEN f.estado_civil='D' THEN 'Divorciado' 
@@ -229,18 +349,27 @@ router.get("/hoja_vida/consulta/:cedula?", async (req, res) => {
     const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
 
     if (checkQuery > 0) {
-      if (query.result_db1[0].cod_grado_puesto == 99) {
-        valid = true;
-        if (query.result_db1.length > 0) {
+      if (query.result_db1.length > 0) {
+        if (query.result_db1[0].cod_grado_puesto == 99) {
+          valid = true;
           beneficiario = query.result_db1[0];
           db = 1;
-        } else if (query.result_db2.length > 0) {
+        }
+      } else if (query.result_db2.length > 0) {
+        if (query.result_db2[0].cod_grado_puesto == 99) {
+          valid = true;
           beneficiario = query.result_db2[0];
           db = 2;
-        } else if (query.result_db3.length > 0) {
+        }
+      } else if (query.result_db3.length > 0) {
+        if (query.result_db3[0].cod_grado_puesto == 99) {
+          valid = true;
           beneficiario = query.result_db3[0];
           db = 3;
-        } else if (query.result_db4.length > 0) {
+        }
+      } else if (query.result_db4.length > 0) {
+        if (query.result_db4[0].cod_grado_puesto == 99) {
+          valid = true;
           beneficiario = query.result_db4[0];
           db = 4;
         }
@@ -265,6 +394,20 @@ router.get("/hoja_vida/consulta/:cedula?", async (req, res) => {
       res.status(404).send({ message: "No existe resultados", error: "" });
       return false;
     }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
+router.get("/sisap/lista_dep/", async (req, res) => {
+  
+  try {
+    const sqlQuery = `SELECT cod_dep, denominacion FROM arrd05 ORDER BY cod_dep`;
+
+    const query =  await specificQuery({ sqlQuery: sqlQuery, db:1 });
+    
+    res.json(query);
+    return true;
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
   }
