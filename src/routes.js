@@ -288,11 +288,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     }
 
     if (beneficiario.length>0) {
-      const result_employee = {
-        ...beneficiario,
-        edad: diffYear(beneficiario.fecha_nacimiento),
-        antiguedad: diffYear(beneficiario.fecha_ingreso),
-      };
+      const result_employee = beneficiario;
       res.json(result_employee);
       return true;
     } else {
