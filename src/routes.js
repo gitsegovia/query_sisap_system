@@ -219,10 +219,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     (select devolver_grado_puesto(
       (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
     FROM v_cnmd06_fichas_2 as f 
-    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where f.cod_dep=${cod_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+    where ${cod_dep<1000 ? `f.cod_dep=1 and t.cod_secretaria=${cod_dep}` : `f.cod_dep=${cod_dep}`} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+    
 
     const query = await identifiedQuery({ sqlQuery, table: "f." });
     const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
@@ -336,7 +337,7 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
     (select devolver_grado_puesto(
       (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
     FROM v_cnmd06_fichas_2 as f 
-    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
     where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
@@ -398,11 +399,18 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
 router.get("/sisap/lista_dep/", async (req, res) => {
   
   try {
-    const sqlQuery = `SELECT cod_dep, denominacion FROM arrd05 ORDER BY cod_dep`;
+    const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 ORDER BY cod_dep`;
+    const sqlQuerySec = `SELECT DISTINCT c.cod_secretaria as cod_dep, ( SELECT xc.denominacion
+      FROM cugd02_secretaria xc
+      WHERE xc.cod_tipo_institucion = c.cod_tipo_inst AND xc.cod_institucion = c.cod_inst AND xc.cod_dependencia = c.cod_dep AND xc.cod_dir_superior = c.cod_dir_superior AND xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria
+      GROUP BY xc.denominacion) AS denominacion
+    FROM cnmd05 c where cod_dep=1 ORDER BY cod_secretaria`;
 
-    const query =  await specificQuery({ sqlQuery: sqlQuery, db:1 });
-    
-    res.json(query);
+    const queryDep =  await specificQuery({ sqlQuery: sqlQueryDep, db:1 });
+    const querySec =  await specificQuery({ sqlQuery: sqlQuerySec, db:1 });
+    const result = querySec.concat(queryDep);
+
+    res.json(result);
     return true;
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
