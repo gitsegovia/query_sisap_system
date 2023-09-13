@@ -192,6 +192,26 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     return false;
   }
 
+  const getCondition = () => {
+    if(cod_dep.includes('-')){
+      const codSplit = cod_dep.split('-');
+      if(codSplit.length<2){
+        return null;
+      }
+      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]}`
+    }
+    if(cod_dep< 1000){
+      return null;
+    }
+    return `f.cod_dep=${cod_dep}`
+  }
+
+  const condition_dep = getCondition();
+  if(condition_dep===null){
+    res.status(404).send("Dependencia requerida");
+    return false;
+  }
+console.log(condition_dep);
   try {
     let db = 1;
     let beneficiario = [];
@@ -222,7 +242,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where ${cod_dep<1000 ? `f.cod_dep=1 and t.cod_secretaria=${cod_dep}` : `f.cod_dep=${cod_dep}`} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
     
 
     const query = await identifiedQuery({ sqlQuery, table: "f." });
@@ -400,11 +420,20 @@ router.get("/sisap/lista_dep/", async (req, res) => {
   
   try {
     const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 ORDER BY cod_dep`;
-    const sqlQuerySec = `SELECT DISTINCT c.cod_secretaria as cod_dep, ( SELECT xc.denominacion
-      FROM cugd02_secretaria xc
-      WHERE xc.cod_tipo_institucion = c.cod_tipo_inst AND xc.cod_institucion = c.cod_inst AND xc.cod_dependencia = c.cod_dep AND xc.cod_dir_superior = c.cod_dir_superior AND xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria
-      GROUP BY xc.denominacion) AS denominacion
-    FROM cnmd05 c where cod_dep=1 ORDER BY cod_secretaria`;
+    const sqlQuerySec = `SELECT DISTINCT (
+      CASE 
+        WHEN c.cod_secretaria < '10' 
+        THEN ('0' || c.cod_secretaria || '-' || c.cod_direccion)::varchar 
+        ELSE (c.cod_secretaria || '-' || c.cod_direccion)::varchar 
+      END)::varchar as cod_dep,
+          ( SELECT xc.denominacion
+          FROM cugd02_direccion xc
+          WHERE xc.cod_tipo_institucion = c.cod_tipo_inst AND xc.cod_institucion = c.cod_inst AND 
+                xc.cod_dependencia = c.cod_dep AND xc.cod_dir_superior = c.cod_dir_superior AND 
+                xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria AND 
+                xc.cod_direccion = c.cod_direccion
+          GROUP BY xc.denominacion) AS denominacion
+        FROM cnmd05 c where cod_dep=1 ORDER BY cod_dep`;
 
     const queryDep =  await specificQuery({ sqlQuery: sqlQueryDep, db:1 });
     const querySec =  await specificQuery({ sqlQuery: sqlQuerySec, db:1 });
