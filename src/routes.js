@@ -199,17 +199,20 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         return null;
       }
       if(codSplit[1]!='00'){
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]}`
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3)`
       }
       if(codSplit[0]=='01' || codSplit[0]=='13'){
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5)`
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`
       }
-      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]}`
+      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_tipo_nomina in (1,2,3)`
     }
     if(cod_dep< 1000){
       return null;
     }
-    return `f.cod_dep=${cod_dep}`
+    if(cod_dep==1009){
+      return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,7)`
+    }
+    return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,2)`
   }
 
   const condition_dep = getCondition();
@@ -248,7 +251,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
     
 
     const query = await identifiedQuery({ sqlQuery, table: "f." });
