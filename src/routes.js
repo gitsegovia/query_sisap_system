@@ -198,7 +198,13 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       if(codSplit.length<2){
         return null;
       }
-      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]}`
+      if(codSplit[1]!='00'){
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]}`
+      }
+      if(codSplit[0]=='01' || codSplit[0]=='13'){
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5)`
+      }
+      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]}`
     }
     if(cod_dep< 1000){
       return null;
@@ -211,7 +217,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     res.status(404).send("Dependencia requerida");
     return false;
   }
-console.log(condition_dep);
+
   try {
     let db = 1;
     let beneficiario = [];
@@ -423,17 +429,30 @@ router.get("/sisap/lista_dep/", async (req, res) => {
     const sqlQuerySec = `SELECT DISTINCT (
       CASE 
         WHEN c.cod_secretaria < '10' 
-        THEN ('0' || c.cod_secretaria || '-' || c.cod_direccion)::varchar 
-        ELSE (c.cod_secretaria || '-' || c.cod_direccion)::varchar 
+        THEN ('0' || c.cod_secretaria || '-00')::varchar 
+        ELSE (c.cod_secretaria || '-00')::varchar 
       END)::varchar as cod_dep,
           ( SELECT xc.denominacion
-          FROM cugd02_direccion xc
+          FROM cugd02_secretaria xc
           WHERE xc.cod_tipo_institucion = c.cod_tipo_inst AND xc.cod_institucion = c.cod_inst AND 
                 xc.cod_dependencia = c.cod_dep AND xc.cod_dir_superior = c.cod_dir_superior AND 
-                xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria AND 
-                xc.cod_direccion = c.cod_direccion
+                xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria
           GROUP BY xc.denominacion) AS denominacion
-        FROM cnmd05 c where cod_dep=1 and cod_ficha!=0  ORDER BY cod_dep`;
+        FROM cnmd05 c where cod_dep=1 and cod_ficha!=0
+        UNION
+        SELECT
+          DISTINCT (
+            CASE 
+              WHEN cod_secretaria < '10' 
+              THEN ('0' || cod_secretaria || '-' || cod_direccion)::varchar 
+              ELSE (cod_secretaria || '-' || cod_direccion)::varchar
+            END
+          )::varchar as cod_dep,
+          denominacion
+        FROM cugd02_direccion
+          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) )
+          ORDER BY cod_dep
+         `;
 
     const queryDep =  await specificQuery({ sqlQuery: sqlQueryDep, db:1 });
     const querySec =  await specificQuery({ sqlQuery: sqlQuerySec, db:1 });
