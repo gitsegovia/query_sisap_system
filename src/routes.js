@@ -433,7 +433,7 @@ router.get("/sisap/lista_dep/", async (req, res) => {
                 xc.cod_coordinacion = c.cod_coordinacion AND xc.cod_secretaria = c.cod_secretaria AND 
                 xc.cod_direccion = c.cod_direccion
           GROUP BY xc.denominacion) AS denominacion
-        FROM cnmd05 c where cod_dep=1 ORDER BY cod_dep`;
+        FROM cnmd05 c where cod_dep=1 and cod_ficha!=0  ORDER BY cod_dep`;
 
     const queryDep =  await specificQuery({ sqlQuery: sqlQueryDep, db:1 });
     const querySec =  await specificQuery({ sqlQuery: sqlQuerySec, db:1 });
