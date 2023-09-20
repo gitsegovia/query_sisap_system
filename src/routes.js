@@ -226,7 +226,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     let beneficiario = [];
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
-    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
             WHEN f.estado_civil='S' THEN 'Soltero' 
             WHEN f.estado_civil='C' THEN 'Casado' 
             WHEN f.estado_civil='D' THEN 'Divorciado' 
