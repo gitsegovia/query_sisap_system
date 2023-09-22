@@ -215,7 +215,10 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if(cod_dep==1009){
       return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,7)`
     }
-    if(cod_dep==1036){
+    if(cod_dep==1014){
+      return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,2,3,8)`
+    }
+    if(cod_dep==1036 || cod_dep==1039){
       return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1)`
     }
     return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,2)`
@@ -459,7 +462,7 @@ router.get("/sisap/lista_dep/", async (req, res) => {
           )::varchar as cod_dep,
           denominacion
         FROM cugd02_direccion
-          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria=15 and cod_direccion in (1)))
+          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria=15 and cod_direccion in (1,2,3,4,5,8,9)))
           ORDER BY cod_dep
          `;
 
