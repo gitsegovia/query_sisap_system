@@ -205,7 +205,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`
       }
       if(codSplit[0]=='15'){
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1) and t.cod_tipo_nomina in (1,2,3)`
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3)`
       }
       return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_tipo_nomina in (1,2,3)`
     }
