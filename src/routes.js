@@ -204,6 +204,9 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       if(codSplit[0]=='01' || codSplit[0]=='13'){
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`
       }
+      if(codSplit[0]=='15'){
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1) and t.cod_tipo_nomina in (1,2,3)`
+      }
       return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_tipo_nomina in (1,2,3)`
     }
     if(cod_dep< 1000){
@@ -347,7 +350,7 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
     let beneficiario = "";
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
-    f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
             WHEN f.estado_civil='S' THEN 'Soltero' 
             WHEN f.estado_civil='C' THEN 'Casado' 
             WHEN f.estado_civil='D' THEN 'Divorciado' 
@@ -456,7 +459,7 @@ router.get("/sisap/lista_dep/", async (req, res) => {
           )::varchar as cod_dep,
           denominacion
         FROM cugd02_direccion
-          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) )
+          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria=15 and cod_direccion= in (1)))
           ORDER BY cod_dep
          `;
 
