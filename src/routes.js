@@ -213,15 +213,15 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       return null;
     }
     if(cod_dep==1009){
-      return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,7)`
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`
     }
     if(cod_dep==1014){
-      return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,2,3,8)`
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)`
     }
     if(cod_dep==1036 || cod_dep==1039){
-      return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1)`
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)`
     }
-    return `f.cod_dep=${cod_dep} and t.cod_tipo_nomina in (1,2)`
+    return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`
   }
 
   const condition_dep = getCondition();
@@ -255,7 +255,8 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
     f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
     (select devolver_grado_puesto(
-      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
+      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto,
+      hn.cod_tipo_nomina
     FROM v_cnmd06_fichas_2 as f 
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
