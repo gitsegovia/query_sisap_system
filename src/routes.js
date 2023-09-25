@@ -201,8 +201,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       if(codSplit[1]!='00'){
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3)`
       }
-      if(codSplit[0]=='01' || codSplit[0]=='13'){
+      if(codSplit[0]=='01'){
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`
+      }
+      if(codSplit[0]=='13'){
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3)`
       }
       if(codSplit[0]=='15'){
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3)`
@@ -463,7 +466,7 @@ router.get("/sisap/lista_dep/", async (req, res) => {
           )::varchar as cod_dep,
           denominacion
         FROM cugd02_direccion
-          WHERE cod_dependencia = 1 AND cod_coordinacion = 1 AND ( (cod_secretaria =1 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria =13 AND cod_direccion in (2,3,4,5)) OR (cod_secretaria=15 and cod_direccion in (1,2,3,4,5,8,9)))
+          WHERE cod_dependencia=1 AND cod_coordinacion=1 AND ( (cod_secretaria=1 AND cod_direccion in (3,4,5)) OR (cod_secretaria=13 AND cod_direccion in (2,3,4,5,8)) OR (cod_secretaria=15 and cod_direccion in (1,2,4,8,9)))
           ORDER BY cod_dep
          `;
 
