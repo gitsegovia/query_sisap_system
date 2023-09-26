@@ -440,6 +440,54 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
   }
 });
 
+router.get("/hoja_vida/lista_empleados/", async (req, res) => {
+  try {
+    let condition = "";
+    const dep = ["01-3", "01-4", "01-5", "13-2", "13-3", "13-4", "13-5", "13-8", "15-1", "15-2", "15-4", "15-8", "15-9"];
+
+    condition = condition.concat(`( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3) ) `);
+
+    dep.forEach((element) => {
+      const codSplit = element.split("-");
+      condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3) ) `);
+    });
+
+    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,10,11,12,14,16,17,18,19,20,21) and t.cod_tipo_nomina in (1,2,3,29) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep=1009 and f.cod_tipo_nomina in (1,7) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep=1014 and f.cod_tipo_nomina in (1,2,3,8) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep=1015 and f.cod_tipo_nomina in (1,2,3) ) `);
+
+    condition = condition.concat(`OR ( f.cod_dep in (1036,1039) and f.cod_tipo_nomina in (1) ) `);
+
+    condition = condition.concat(
+      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1037,1038,1040,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
+    );
+
+    const CURRENT_YEAR = new Date().getFullYear();
+    const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
+    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia
+    FROM v_cnmd06_fichas_2 as f 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
+    where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext] and (${condition}) ORDER BY t.cod_tipo_nomina`;
+
+    const query = await unifiedQuery({ sqlQuery, table: "f." });
+
+    res.json(query);
+    return true;
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 router.get("/sisap/lista_dep/", async (req, res) => {
   try {
     const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 ORDER BY cod_dep`;
