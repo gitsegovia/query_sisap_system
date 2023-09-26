@@ -275,13 +275,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (checkQuery > 0) {
       if (query.result_db1.length > 0) {
         query.result_db1.map((emp) => {
-          if (emp.cod_grado_puesto == 99) {
-            beneficiario.push({
-              ...emp,
-              edad: diffYear(emp.fecha_nacimiento),
-              antiguedad: diffYear(emp.fecha_ingreso),
-            });
-          }
+          beneficiario.push({
+            ...emp,
+            edad: diffYear(emp.fecha_nacimiento),
+            antiguedad: diffYear(emp.fecha_ingreso),
+          });
         });
 
         if (beneficiario.length > 0) {
@@ -289,13 +287,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         }
       } else if (query.result_db2.length > 0) {
         query.result_db2.map((emp) => {
-          if (emp.cod_grado_puesto == 99) {
-            beneficiario.push({
-              ...emp,
-              edad: diffYear(emp.fecha_nacimiento),
-              antiguedad: diffYear(emp.fecha_ingreso),
-            });
-          }
+          beneficiario.push({
+            ...emp,
+            edad: diffYear(emp.fecha_nacimiento),
+            antiguedad: diffYear(emp.fecha_ingreso),
+          });
         });
 
         if (beneficiario.length > 0) {
@@ -303,13 +299,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         }
       } else if (query.result_db3.length > 0) {
         query.result_db3.map((emp) => {
-          if (emp.cod_grado_puesto == 99) {
-            beneficiario.push({
-              ...emp,
-              edad: diffYear(emp.fecha_nacimiento),
-              antiguedad: diffYear(emp.fecha_ingreso),
-            });
-          }
+          beneficiario.push({
+            ...emp,
+            edad: diffYear(emp.fecha_nacimiento),
+            antiguedad: diffYear(emp.fecha_ingreso),
+          });
         });
 
         if (beneficiario.length > 0) {
@@ -317,13 +311,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         }
       } else if (query.result_db4.length > 0) {
         query.result_db4.map((emp) => {
-          if (emp.cod_grado_puesto == 99) {
-            beneficiario.push({
-              ...emp,
-              edad: diffYear(emp.fecha_nacimiento),
-              antiguedad: diffYear(emp.fecha_ingreso),
-            });
-          }
+          beneficiario.push({
+            ...emp,
+            edad: diffYear(emp.fecha_nacimiento),
+            antiguedad: diffYear(emp.fecha_ingreso),
+          });
         });
 
         if (beneficiario.length > 0) {
