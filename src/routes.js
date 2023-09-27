@@ -204,6 +204,9 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       if (codSplit[0] == "01") {
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`;
       }
+      if (codSplit[0] == "10") {
+        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (9) and t.cod_tipo_nomina in (1,2,3)`;
+      }
       if (codSplit[0] == "13") {
         return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3)`;
       }
@@ -435,7 +438,7 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
 router.get("/hoja_vida/lista_empleados/", async (req, res) => {
   try {
     let condition = "";
-    const dep = ["01-3", "01-4", "01-5", "13-2", "13-3", "13-4", "13-5", "13-8", "15-1", "15-2", "15-4", "15-8", "15-9"];
+    const dep = ["01-3", "01-4", "01-5", "10-9", "13-2", "13-3", "13-4", "13-5", "13-8", "15-1", "15-2", "15-4", "15-8", "15-9"];
 
     condition = condition.concat(`( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3) ) `);
 
@@ -443,6 +446,8 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
       const codSplit = element.split("-");
       condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3) ) `);
     });
+
+    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (9) and t.cod_tipo_nomina in (1,2,3) ) `);
 
     condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) `);
 
@@ -463,8 +468,29 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     );
 
     const CURRENT_YEAR = new Date().getFullYear();
-    const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
-    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia
+    const sqlQuery = `SELECT  f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre,
+    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+            WHEN f.estado_civil='S' THEN 'Soltero'
+            WHEN f.estado_civil='C' THEN 'Casado'
+            WHEN f.estado_civil='D' THEN 'Divorciado'
+            ELSE 'Otro'
+          END estado_civil, f.grupo_sanguineo,
+    f.correo_electronico,
+    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,
+    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,
+    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,
+    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
+    (select denominacion from cugd01_centros_poblados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen and cod_centro=f.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
+    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=f.cod_estado_habitacion) as deno_estado_habitacion,
+    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion) as deno_municipio_habitacion,
+    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,
+    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion and cod_centro=f.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
+    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
+    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
+    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
+    (select devolver_grado_puesto(
+      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto,
+      hn.cod_tipo_nomina
     FROM v_cnmd06_fichas_2 as f 
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
@@ -473,7 +499,14 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
 
     const query = await unifiedQuery({ sqlQuery, table: "f." });
 
-    res.json(query);
+    const result = query.map((emp) => {
+      return {
+        ...emp,
+        edad: diffYear(emp.fecha_nacimiento),
+      };
+    });
+
+    res.json(result);
     return true;
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
@@ -507,7 +540,7 @@ router.get("/sisap/lista_dep/", async (req, res) => {
           )::varchar as cod_dep,
           denominacion
         FROM cugd02_direccion
-          WHERE cod_dependencia=1 AND cod_coordinacion=1 AND ( (cod_secretaria=1 AND cod_direccion in (3,5)) OR (cod_secretaria=13 AND cod_direccion in (2,3,4,5,8)) OR (cod_secretaria=15 and cod_direccion in (1,2,4,8,9)))
+          WHERE cod_dependencia=1 AND cod_coordinacion=1 AND ( (cod_secretaria=1 AND cod_direccion in (3,5)) OR (cod_secretaria=10 AND cod_direccion in (9)) OR (cod_secretaria=13 AND cod_direccion in (2,3,4,5,8)) OR (cod_secretaria=15 and cod_direccion in (1,2,4,8,9)))
           ORDER BY cod_dep
          `;
 
