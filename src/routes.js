@@ -227,8 +227,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (cod_dep == 1015) {
       return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)`;
     }
-    if (cod_dep == 1036 || cod_dep == 1039) {
-      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)`;
+    if (cod_dep == 1028) {
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)`;
+    }
+    if (cod_dep == 1036) {
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2)`;
     }
     return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`;
   };
