@@ -184,6 +184,101 @@ router.get("/carnet/consulta/:cedula?", async (req, res) => {
   }
 });
 
+router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
+  const { cedula } = req.params;
+
+  if (!cedula) {
+    res.status(404).send("Cedula requerida");
+    return false;
+  }
+
+  try {
+    let valid = false;
+    let db = 1;
+    let beneficiario = "";
+    const CURRENT_YEAR = new Date().getFullYear();
+    const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
+    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
+            WHEN f.estado_civil='S' THEN 'Soltero' 
+            WHEN f.estado_civil='C' THEN 'Casado' 
+            WHEN f.estado_civil='D' THEN 'Divorciado' 
+            ELSE 'Otro'
+          END estado_civil, f.grupo_sanguineo, 
+    f.correo_electronico,
+    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,    
+    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,    
+    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,    
+    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
+    (select denominacion from cugd01_centros_poblados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen and cod_centro=f.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
+    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=f.cod_estado_habitacion) as deno_estado_habitacion,    
+    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion) as deno_municipio_habitacion,    
+    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,    
+    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion and cod_centro=f.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
+    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
+    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
+    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
+    (select devolver_grado_puesto(
+      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
+    FROM v_cnmd06_fichas_2 as f 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+
+    const query = await identifiedQuery({ sqlQuery, table: "f." });
+    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        if (query.result_db1[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db1[0];
+          db = 1;
+        }
+      } else if (query.result_db2.length > 0) {
+        if (query.result_db2[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db2[0];
+          db = 2;
+        }
+      } else if (query.result_db3.length > 0) {
+        if (query.result_db3[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db3[0];
+          db = 3;
+        }
+      } else if (query.result_db4.length > 0) {
+        if (query.result_db4[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db4[0];
+          db = 4;
+        }
+      }
+    }
+
+    if (valid) {
+      const sqlQueryFp = `SELECT deno_curso, deno_institucion, duracion, desde, hasta, observaciones
+    FROM v_cnmd06_datos_formacion_profesional  
+    where cedula=${cedula}`;
+
+      const queryFp = await specificQuery({ sqlQuery: sqlQueryFp, db });
+      const result_employee = {
+        ...beneficiario,
+        formacion_profesional: queryFp,
+        edad: diffYear(beneficiario.fecha_nacimiento),
+        antiguedad: diffYear(beneficiario.fecha_ingreso),
+      };
+      res.json(result_employee);
+      return true;
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+      return false;
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   const { cod_dep } = req.params;
 
@@ -232,6 +327,9 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     }
     if (cod_dep == 1036) {
       return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2)`;
+    }
+    if (cod_dep == 1040) {
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3)`;
     }
     return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`;
   };
@@ -343,101 +441,6 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   }
 });
 
-router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
-  const { cedula } = req.params;
-
-  if (!cedula) {
-    res.status(404).send("Cedula requerida");
-    return false;
-  }
-
-  try {
-    let valid = false;
-    let db = 1;
-    let beneficiario = "";
-    const CURRENT_YEAR = new Date().getFullYear();
-    const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
-    f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
-            WHEN f.estado_civil='S' THEN 'Soltero' 
-            WHEN f.estado_civil='C' THEN 'Casado' 
-            WHEN f.estado_civil='D' THEN 'Divorciado' 
-            ELSE 'Otro'
-          END estado_civil, f.grupo_sanguineo, 
-    f.correo_electronico,
-    f.deno_cod_estado, f.deno_cod_municipio, f.deno_cod_parroquia, f.deno_cod_centro, f.deno_ciudad,    
-    (select denominacion from cugd01_estados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen) as deno_estado_nacimiento,    
-    (select denominacion from cugd01_municipios where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen) as deno_municipio_nacimiento,    
-    (select denominacion from cugd01_parroquias where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen) as deno_parroquia_nacimiento,
-    (select denominacion from cugd01_centros_poblados where cod_republica=f.cod_pais_origen and cod_estado=f.cod_estado_origen and cod_municipio=f.cod_municipio_origen and cod_parroquia=f.cod_parroquia_origen and cod_centro=f.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
-    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=f.cod_estado_habitacion) as deno_estado_habitacion,    
-    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion) as deno_municipio_habitacion,    
-    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion) as deno_parroquia_habitacion,    
-    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=f.cod_estado_habitacion and cod_municipio=f.cod_municipio_habitacion and cod_parroquia=f.cod_parroquia_habitacion and cod_centro=f.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
-    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
-    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
-    f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
-    (select devolver_grado_puesto(
-      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto
-    FROM v_cnmd06_fichas_2 as f 
-    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
-    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
-    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
-
-    const query = await identifiedQuery({ sqlQuery, table: "f." });
-    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
-
-    if (checkQuery > 0) {
-      if (query.result_db1.length > 0) {
-        if (query.result_db1[0].cod_grado_puesto == 99) {
-          valid = true;
-          beneficiario = query.result_db1[0];
-          db = 1;
-        }
-      } else if (query.result_db2.length > 0) {
-        if (query.result_db2[0].cod_grado_puesto == 99) {
-          valid = true;
-          beneficiario = query.result_db2[0];
-          db = 2;
-        }
-      } else if (query.result_db3.length > 0) {
-        if (query.result_db3[0].cod_grado_puesto == 99) {
-          valid = true;
-          beneficiario = query.result_db3[0];
-          db = 3;
-        }
-      } else if (query.result_db4.length > 0) {
-        if (query.result_db4[0].cod_grado_puesto == 99) {
-          valid = true;
-          beneficiario = query.result_db4[0];
-          db = 4;
-        }
-      }
-    }
-
-    if (valid) {
-      const sqlQueryFp = `SELECT deno_curso, deno_institucion, duracion, desde, hasta, observaciones
-    FROM v_cnmd06_datos_formacion_profesional  
-    where cedula=${cedula}`;
-
-      const queryFp = await specificQuery({ sqlQuery: sqlQueryFp, db });
-      const result_employee = {
-        ...beneficiario,
-        formacion_profesional: queryFp,
-        edad: diffYear(beneficiario.fecha_nacimiento),
-        antiguedad: diffYear(beneficiario.fecha_ingreso),
-      };
-      res.json(result_employee);
-      return true;
-    } else {
-      res.status(404).send({ message: "No existe resultados", error: "" });
-      return false;
-    }
-  } catch (error) {
-    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
-  }
-});
-
 router.get("/hoja_vida/lista_empleados/", async (req, res) => {
   try {
     let condition = "";
@@ -466,8 +469,10 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
 
     condition = condition.concat(`OR ( f.cod_dep in (1036,1039) and f.cod_tipo_nomina in (1) ) `);
 
+    condition = condition.concat(`OR ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) `);
+
     condition = condition.concat(
-      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1037,1038,1040,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
+      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
     );
 
     const CURRENT_YEAR = new Date().getFullYear();
