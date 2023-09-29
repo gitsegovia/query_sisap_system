@@ -35,10 +35,10 @@ const CONDITION_DB4 = "and cod_dep in (1041)";
 
 async function unifiedQuery({ sqlQuery, table = "" }) {
   try {
-    const [result1] = await sequelizeDB1.query(sqlQuery.replace("[condition_ext]", CONDITION_DB1.replace("cod_dep", `${table}cod_dep`)));
-    const [result2] = await sequelizeDB2.query(sqlQuery.replace("[condition_ext]", CONDITION_DB2.replace("cod_dep", `${table}cod_dep`)));
-    const [result3] = await sequelizeDB3.query(sqlQuery.replace("[condition_ext]", CONDITION_DB3.replace("cod_dep", `${table}cod_dep`)));
-    const [result4] = await sequelizeDB4.query(sqlQuery.replace("[condition_ext]", CONDITION_DB4.replace("cod_dep", `${table}cod_dep`)));
+    const [result1] = await sequelizeDB1.query(sqlQuery.replaceAll("[condition_ext]", CONDITION_DB1.replaceAll("cod_dep", `${table}cod_dep`)));
+    const [result2] = await sequelizeDB2.query(sqlQuery.replaceAll("[condition_ext]", CONDITION_DB2.replaceAll("cod_dep", `${table}cod_dep`)));
+    const [result3] = await sequelizeDB3.query(sqlQuery.replaceAll("[condition_ext]", CONDITION_DB3.replaceAll("cod_dep", `${table}cod_dep`)));
+    const [result4] = await sequelizeDB4.query(sqlQuery.replaceAll("[condition_ext]", CONDITION_DB4.replaceAll("cod_dep", `${table}cod_dep`)));
 
     return [...result1, ...result2, ...result3, ...result4];
   } catch (error) {
@@ -59,8 +59,8 @@ export async function identifiedQuery({ sqlQuery, table = "" }) {
       result_db3,
       result_db4,
     };
-    console.log('resultado', result);
-    return result
+    console.log("resultado", result);
+    return result;
   } catch (error) {
     throw new Error(error);
   }
