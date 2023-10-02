@@ -472,7 +472,7 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     condition = condition.concat(`OR ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) `);
 
     condition = condition.concat(
-      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
+      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
     );
 
     const CURRENT_YEAR = new Date().getFullYear();
@@ -549,7 +549,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       ( f.cod_dep=1015 and f.cod_tipo_nomina in (1,2,3) ) OR 
       ( f.cod_dep in (1039) and f.cod_tipo_nomina in (1) ) OR 
       ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1024,1025,1026,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) ) 
+      ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) ) 
       GROUP BY f.denominacion_dependencia
       UNION
       SELECT  
@@ -603,7 +603,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
 
 router.get("/sisap/lista_dep/", async (req, res) => {
   try {
-    const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 ORDER BY cod_dep`;
+    const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 and cod_dep not in (1024,1025,1026) ORDER BY cod_dep`;
     const sqlQuerySec = `SELECT DISTINCT (
       CASE 
         WHEN c.cod_secretaria < '10' 
