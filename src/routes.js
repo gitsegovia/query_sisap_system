@@ -223,7 +223,7 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext]`;
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext]`;
     //where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
 
     const query = await identifiedQuery({ sqlQuery, table: "f." });
@@ -405,7 +405,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] ORDER BY t.cod_tipo_nomina`;
+    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] ORDER BY t.cod_tipo_nomina`;
 
     const query = await identifiedQuery({ sqlQuery, table: "f." });
     const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
@@ -551,7 +551,7 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] and (${condition}) ORDER BY t.cod_tipo_nomina`;
+    where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] and (${condition}) ORDER BY t.cod_tipo_nomina`;
 
     const query = await unifiedQuery({ sqlQuery, table: "f." });
 
@@ -579,7 +579,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] 
+      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] 
       and f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21)  
       GROUP BY f.deno_cod_secretaria
       UNION
@@ -590,7 +590,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] 
+      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] 
       and (
       ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=3 ) OR 
       ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=4 ) OR 
@@ -616,7 +616,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] 
+      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] 
       and (
       ( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) ) OR 
       ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (8,9) ) OR 
@@ -681,7 +681,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8) [condition_ext] 
+      where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13) [condition_ext] 
       and (
       ( f.cod_dep=1009 ) OR 
       ( f.cod_dep=1014 ) OR 
