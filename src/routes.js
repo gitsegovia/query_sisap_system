@@ -300,6 +300,107 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
   }
 });
 
+router.get("/hoja_vida/consulta_foto/:cedula", async (req, res) => {
+  const { cedula } = req.params;
+
+  if (!cedula) {
+    res.status(404).send("Cedula requerida");
+    return false;
+  }
+
+  try {
+    let valid = false;
+    let db = 1;
+    let beneficiario = "";
+    const CURRENT_YEAR = new Date().getFullYear();
+    const sqlQuery = `SELECT f.cedula_identidad
+    FROM v_cnmd06_fichas_2 as f 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`;
+    //where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+
+    const query = await identifiedQuery({ sqlQuery, table: "f." });
+    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+
+    /* con validadcion
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        if (query.result_db1[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db1[0];
+          db = 1;
+        }
+      } else if (query.result_db2.length > 0) {
+        if (query.result_db2[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db2[0];
+          db = 2;
+        }
+      } else if (query.result_db3.length > 0) {
+        if (query.result_db3[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db3[0];
+          db = 3;
+        }
+      } else if (query.result_db4.length > 0) {
+        if (query.result_db4[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db4[0];
+          db = 4;
+        }
+      }
+    }*/
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        valid = true;
+        beneficiario = query.result_db1[0];
+        db = 1;
+      } else if (query.result_db2.length > 0) {
+        valid = true;
+        beneficiario = query.result_db2[0];
+        db = 2;
+      } else if (query.result_db3.length > 0) {
+        valid = true;
+        beneficiario = query.result_db3[0];
+        db = 3;
+      } else if (query.result_db4.length > 0) {
+        valid = true;
+        beneficiario = query.result_db4[0];
+        db = 4;
+      }
+    }
+
+    if (valid) {
+      const sqlQueryFoto = `SELECT imagen, tipo FROM cugd10_imagenes  
+    where cod_campo=11 and identificacion='${cedula}'`;
+
+      const queryFoto = await specificQuery({ sqlQuery: sqlQueryFoto, db });
+      console.log(queryFoto);
+      if (queryFoto.length > 0) {
+        const imagenBytes = queryFoto[0].imagen;
+        const imagenBuffer = Buffer.from(imagenBytes, "base64");
+
+        res.writeHead(200, {
+          "Content-Type": queryFoto[0].tipo, // Ajusta el tipo de contenido según tu caso
+          "Content-Length": imagenBuffer.length,
+        });
+        res.end(imagenBuffer);
+        return true;
+      } else {
+        res.status(404).send("No posee imagen");
+        return false;
+      }
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+      return false;
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   const { cod_dep } = req.params;
 
@@ -315,27 +416,27 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         return null;
       }
       if (codSplit[1] != "00") {
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]}`;
-        //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]}`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "01") {
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5)`;
-        //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "10") {
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (8,9)`;
-        //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (8,9) and t.cod_tipo_nomina in (1,2,3)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "13") {
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5,8)`;
-        //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "15") {
-        return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1,2,3,4,5,8,9)`;
-        //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3)`;
       }
-      return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]}`;
-      //return `f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_tipo_nomina in (1,2,3,29)`;
+      return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]}`;
+      //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29)`;
     }
     if (cod_dep < 1000) {
       return null;
@@ -368,6 +469,26 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`;
   };
 
+  const getConditionDB = () => {
+    if (cod_dep.includes("-")) {
+      return 1;
+    }
+    if (cod_dep < 1000) {
+      return 1;
+    }
+    if (cod_dep == 1009 || cod_dep == 1006 || cod_dep == 1021 || cod_dep == 1027 || cod_dep == 1028 || cod_dep == 1036 || cod_dep == 1037 || cod_dep == 1038 || cod_dep == 1039 || cod_dep == 1045) {
+      return 2;
+      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`;
+    }
+    if (cod_dep == 1035) {
+      return 3;
+    }
+    if (cod_dep == 1041) {
+      return 4;
+    }
+    return 1;
+  };
+
   const condition_dep = getCondition();
   if (condition_dep === null) {
     res.status(404).send("Dependencia requerida");
@@ -375,7 +496,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   }
 
   try {
-    let db = 1;
+    let db = getConditionDB();
     let beneficiario = [];
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
@@ -407,8 +528,17 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
     where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext] ORDER BY t.cod_tipo_nomina`;
 
-    const query = await identifiedQuery({ sqlQuery, table: "f." });
-    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+    const query = await specificQuery({ sqlQuery, table: "f.", db: db });
+    if (query.length > 0) {
+      query.map((emp) => {
+        beneficiario.push({
+          ...emp,
+          edad: diffYear(emp.fecha_nacimiento),
+          antiguedad: diffYear(emp.fecha_ingreso),
+        });
+      });
+    }
+    /*const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
 
     if (checkQuery > 0) {
       if (query.result_db1.length > 0) {
@@ -460,10 +590,10 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
           db = 4;
         }
       }
-    }
+    }*/
 
     if (beneficiario.length > 0) {
-      const result_employee = beneficiario;
+      const result_employee = query; //beneficiario;
       res.json(result_employee);
       return true;
     } else {
