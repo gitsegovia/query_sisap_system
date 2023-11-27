@@ -300,6 +300,107 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
   }
 });
 
+router.get("/hoja_vida/consulta_foto/:cedula", async (req, res) => {
+  const { cedula } = req.params;
+
+  if (!cedula) {
+    res.status(404).send("Cedula requerida");
+    return false;
+  }
+
+  try {
+    let valid = false;
+    let db = 1;
+    let beneficiario = "";
+    const CURRENT_YEAR = new Date().getFullYear();
+    const sqlQuery = `SELECT f.cedula_identidad
+    FROM v_cnmd06_fichas_2 as f 
+    FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo 
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
+    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
+    where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`;
+    //where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+
+    const query = await identifiedQuery({ sqlQuery, table: "f." });
+    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+
+    /* con validadcion
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        if (query.result_db1[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db1[0];
+          db = 1;
+        }
+      } else if (query.result_db2.length > 0) {
+        if (query.result_db2[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db2[0];
+          db = 2;
+        }
+      } else if (query.result_db3.length > 0) {
+        if (query.result_db3[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db3[0];
+          db = 3;
+        }
+      } else if (query.result_db4.length > 0) {
+        if (query.result_db4[0].cod_grado_puesto == 99) {
+          valid = true;
+          beneficiario = query.result_db4[0];
+          db = 4;
+        }
+      }
+    }*/
+    if (checkQuery > 0) {
+      if (query.result_db1.length > 0) {
+        valid = true;
+        beneficiario = query.result_db1[0];
+        db = 1;
+      } else if (query.result_db2.length > 0) {
+        valid = true;
+        beneficiario = query.result_db2[0];
+        db = 2;
+      } else if (query.result_db3.length > 0) {
+        valid = true;
+        beneficiario = query.result_db3[0];
+        db = 3;
+      } else if (query.result_db4.length > 0) {
+        valid = true;
+        beneficiario = query.result_db4[0];
+        db = 4;
+      }
+    }
+
+    if (valid) {
+      const sqlQueryFoto = `SELECT imagen, tipo FROM cugd10_imagenes  
+    where cod_campo=11 and identificacion='${cedula}'`;
+
+      const queryFoto = await specificQuery({ sqlQuery: sqlQueryFoto, db });
+      console.log(queryFoto);
+      if (queryFoto.length > 0) {
+        const imagenBytes = queryFoto[0].imagen;
+        const imagenBuffer = Buffer.from(imagenBytes, "base64");
+
+        res.writeHead(200, {
+          "Content-Type": queryFoto[0].tipo, // Ajusta el tipo de contenido según tu caso
+          "Content-Length": imagenBuffer.length,
+        });
+        res.end(imagenBuffer);
+        return true;
+      } else {
+        res.status(404).send("No posee imagen");
+        return false;
+      }
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+      return false;
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   const { cod_dep } = req.params;
 
