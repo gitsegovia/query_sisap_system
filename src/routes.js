@@ -610,26 +610,26 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     let condition = "";
     const dep = ["01-3", "01-4", "01-5", "10-8", "10-9", "13-2", "13-3", "13-4", "13-5", "13-8", "15-1", "15-2", "15-4", "15-8", "15-9"];
 
-    condition = condition.concat(`( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) ) `);
-    //condition = condition.concat(`( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3) ) `);
+    condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) ) `);
+    //condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) ) `);
 
     dep.forEach((element) => {
       const codSplit = element.split("-");
-      condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} ) `);
-      //condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=${codSplit[0]} and t.cod_direccion=${codSplit[1]} and t.cod_tipo_nomina in (1,2,3) ) `);
+      condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} ) `);
+      //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) ) `);
     });
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (8,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (8,9) and t.cod_tipo_nomina in (1,2,3) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion NOT IN (1,2,3,4,5,8,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and t.cod_tipo_nomina in (1,2,3,29) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina in (1,2,3,29) ) `);
 
     condition = condition.concat(`OR ( f.cod_dep=1009 ) `);
     //condition = condition.concat(`OR ( f.cod_dep=1009 and f.cod_tipo_nomina in (1,7) ) `);
@@ -710,7 +710,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext] 
-      and f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21)  
+      and f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21)  
       GROUP BY f.deno_cod_secretaria
       UNION
       SELECT  
@@ -722,21 +722,21 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext] 
       and (
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=3 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=4 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=5 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion=8 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion=9 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=2 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=3 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=4 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=5 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=8 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=1 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=2 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=4 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=8 ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=9 ) ) 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=3 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=4 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=5 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion=8 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion=9 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=2 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=3 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=4 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=5 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=8 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=1 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=2 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=4 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=8 ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=9 ) ) 
       GROUP BY f.deno_cod_direccion
       UNION
       SELECT  
@@ -748,10 +748,10 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext] 
       and (
-      ( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (8,9) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion NOT IN (1,2,3,4,5,8,9) ) ) 
+      ( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) ) ) 
       GROUP BY f.deno_cod_secretaria`;
     /*const sqlQuery = `SELECT  
       COUNT(f.cedula_identidad),
@@ -761,7 +761,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext] 
-      and f.cod_dep=1 and t.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and t.cod_tipo_nomina in (1,2,3,29)  
+      and f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and t.cod_tipo_nomina in (1,2,3,29)  
       GROUP BY f.deno_cod_secretaria
       UNION
       SELECT  
@@ -773,21 +773,21 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext] 
       and (
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=3 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=01 and t.cod_direccion=5 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion=9 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=2 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=3 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=5 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=1 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=2 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion=9 and t.cod_tipo_nomina in (1,2,3) ) ) 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=3 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=01 and f.cod_direccion=5 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion=9 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=2 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=3 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=5 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=1 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=2 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=4 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=8 and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion=9 and t.cod_tipo_nomina in (1,2,3) ) ) 
       GROUP BY f.deno_cod_direccion
       UNION
       SELECT  
@@ -799,10 +799,10 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
       where t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext] 
       and (
-      ( f.cod_dep=1 and t.cod_secretaria=1 and t.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=10 and t.cod_direccion NOT IN (8,9) and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=13 and t.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) OR 
-      ( f.cod_dep=1 and t.cod_secretaria=15 and t.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3) ) ) 
+      ( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) OR 
+      ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3) ) ) 
       GROUP BY f.deno_cod_secretaria`;*/
     const sqlQuery_dep = `SELECT  
       COUNT(f.cedula_identidad),
