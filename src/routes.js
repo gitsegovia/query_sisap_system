@@ -81,7 +81,7 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
     } else {
       const sqlQuery_obrero = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
       f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
-      f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) [condition_ext]`;
+      f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet, hn.periodo_desde FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) [condition_ext] order by hn.periodo_desde DESC LIMIT 1`;
       const query_obrero = await identifiedQuery({ sqlQuery: sqlQuery_obrero, table: "t." });
 
       const checkQuery = Object.values(query_obrero).reduce((acc, current) => acc + current.length, 0);
@@ -90,16 +90,16 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
         valid = true;
         periodo_desde = new Date();
         if (query_obrero.result_db1.length > 0) {
-          beneficiario = query.result_db1[0];
+          beneficiario = query_obrero.result_db1[0];
           db = 1;
         } else if (query_obrero.result_db2.length > 0) {
-          beneficiario = query.result_db2[0];
+          beneficiario = query_obrero.result_db2[0];
           db = 2;
         } else if (query_obrero.result_db3.length > 0) {
-          beneficiario = query.result_db3[0];
+          beneficiario = query_obrero.result_db3[0];
           db = 3;
         } else if (query_obrero.result_db4.length > 0) {
-          beneficiario = query.result_db4[0];
+          beneficiario = query_obrero.result_db4[0];
           db = 4;
         }
       }
