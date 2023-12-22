@@ -99,7 +99,8 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
 
       if (checkQuery > 0) {
         valid = true;
-        periodo_desde = new Date();
+        const current = new Date();
+        //periodo_desde = new Date();
         if (query_obrero.length > 0) {
           const date = new Date(query_obrero[0].periodo_desde);
           const diffInTime = current.getTime() - date.getTime();
