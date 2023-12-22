@@ -100,12 +100,12 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
       if (checkQuery > 0) {
         valid = true;
         periodo_desde = new Date();
-        if (query.length > 0) {
-          const date = new Date(query[0].periodo_desde);
+        if (query_obrero.length > 0) {
+          const date = new Date(query_obrero[0].periodo_desde);
           const diffInTime = current.getTime() - date.getTime();
           const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
           valid = diffInDays <= VALID_DAYS;
-          beneficiario = query[0];
+          beneficiario = query_obrero[0];
           periodo_desde = date;
         }
         // a todos los sisap
