@@ -37,12 +37,22 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet, hn.periodo_desde FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103 [condition_ext] order by hn.periodo_desde DESC LIMIT 1`;
 
-    const query = await identifiedQuery({ sqlQuery, table: "t." });
-    const checkQuery = Object.values(query).reduce((acc, current) => acc + current.length, 0);
+    const query = await specificQuery({ sqlQuery, table: "t.", db: 1 });
+    const checkQuery = query.length; // Object.values(query).reduce((acc, current) => acc + current.length, 0);
 
     if (checkQuery > 0) {
       const current = new Date();
 
+      if (query.length > 0) {
+        const date = new Date(query[0].periodo_desde);
+        const diffInTime = current.getTime() - date.getTime();
+        const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
+        valid = diffInDays <= VALID_DAYS;
+        beneficiario = query[0];
+        periodo_desde = date;
+      }
+      // a todos los sisap
+      /*
       if (query.result_db1.length > 0) {
         const date = new Date(query.result_db1[0].periodo_desde);
         const diffInTime = current.getTime() - date.getTime();
@@ -78,17 +88,28 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
         periodo_desde = date;
         db = 4;
       }
+      */
     } else {
       const sqlQuery_obrero = `SELECT cedula_identidad, primer_nombre || ' ' || segundo_nombre || ' ' || primer_apellido || ' ' || segundo_apellido as nombre, 
       f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.cod_ficha, f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, 
       f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet, hn.periodo_desde FROM v_cnmd06_fichas_2 as f FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina where f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) [condition_ext] order by hn.periodo_desde DESC LIMIT 1`;
-      const query_obrero = await identifiedQuery({ sqlQuery: sqlQuery_obrero, table: "t." });
+      const query_obrero = await specificQuery({ sqlQuery: sqlQuery_obrero, table: "t.", db: 1 });
 
-      const checkQuery = Object.values(query_obrero).reduce((acc, current) => acc + current.length, 0);
+      const checkQuery = query_obrero.length; //Object.values(query_obrero).reduce((acc, current) => acc + current.length, 0);
 
       if (checkQuery > 0) {
         valid = true;
         periodo_desde = new Date();
+        if (query.length > 0) {
+          const date = new Date(query[0].periodo_desde);
+          const diffInTime = current.getTime() - date.getTime();
+          const diffInDays = Math.ceil(diffInTime / (1000 * 3600 * 24));
+          valid = diffInDays <= VALID_DAYS;
+          beneficiario = query[0];
+          periodo_desde = date;
+        }
+        // a todos los sisap
+        /*
         if (query_obrero.result_db1.length > 0) {
           beneficiario = query_obrero.result_db1[0];
           db = 1;
@@ -102,6 +123,7 @@ router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
           beneficiario = query_obrero.result_db4[0];
           db = 4;
         }
+        */
       }
     }
 
