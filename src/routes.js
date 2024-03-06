@@ -499,7 +499,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (cod_dep < 1000) {
       return 1;
     }
-    if (cod_dep == 1009 || cod_dep == 1006 || cod_dep == 1021 || cod_dep == 1027 || cod_dep == 1028 || cod_dep == 1036 || cod_dep == 1037 || cod_dep == 1038 || cod_dep == 1039 || cod_dep == 1045) {
+    if ( cod_dep == 1006 || cod_dep == 1021 || cod_dep == 1027 || cod_dep == 1028 || cod_dep == 1036 || cod_dep == 1037 || cod_dep == 1038 || cod_dep == 1039 || cod_dep == 1045) {
       return 2;
       //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`;
     }
