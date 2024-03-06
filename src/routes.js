@@ -439,57 +439,57 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         return null;
       }
       if (codSplit[1] != "00") {
-        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "01") {
-        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "10") {
-        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "13") {
-        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3)`;
       }
       if (codSplit[0] == "15") {
-        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3)`;
+        //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+        return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3)`;
       }
-      return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
-      //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29)`;
+      //return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (21,22,23,24,25,9)`;
+      return `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29)`;
     }
     if (cod_dep < 1000) {
       return null;
     }
     if (cod_dep == 1009) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`;
     }
     if (cod_dep == 1014) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)`;
     }
     if (cod_dep == 1015) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)`;
     }
     if (cod_dep == 1028) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)`;
     }
     if (cod_dep == 1039) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)`;
     }
     if (cod_dep == 1040) {
-      return `f.cod_dep=${cod_dep}`;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3)`;
+      //return `f.cod_dep=${cod_dep}`;
+      return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3)`;
     }
-    return `f.cod_dep=${cod_dep}`;
-    //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`;
+    //return `f.cod_dep=${cod_dep}`;
+    return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)`;
   };
 
   const getConditionDB = () => {
@@ -499,9 +499,8 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (cod_dep < 1000) {
       return 1;
     }
-    if ( cod_dep == 1006 || cod_dep == 1021 || cod_dep == 1027 || cod_dep == 1028 || cod_dep == 1036 || cod_dep == 1037 || cod_dep == 1038 || cod_dep == 1039 || cod_dep == 1045) {
+    if (cod_dep == 1006 || cod_dep == 1021 || cod_dep == 1027 || cod_dep == 1028 || cod_dep == 1036 || cod_dep == 1037 || cod_dep == 1038 || cod_dep == 1039 || cod_dep == 1045) {
       return 2;
-      //return `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)`;
     }
     if (cod_dep == 1035) {
       return 3;
@@ -616,7 +615,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     }*/
 
     if (beneficiario.length > 0) {
-      const result_employee = query; //beneficiario;
+      const result_employee = beneficiario; //query;
       res.json(result_employee);
       return true;
     } else {
@@ -633,48 +632,48 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     let condition = "";
     const dep = ["01-3", "01-4", "01-5", "10-8", "10-9", "13-2", "13-3", "13-4", "13-5", "13-8", "15-1", "15-2", "15-4", "15-8", "15-9"];
 
-    condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-    //condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+    condition = condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) ) `);
 
     dep.forEach((element) => {
       const codSplit = element.split("-");
-      condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-      //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) ) `);
+      //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+      condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) ) `);
     });
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina in (1,2,3,29) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina not in (21,22,23,24,25,9) ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina in (1,2,3,29) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1009 ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1009 and f.cod_tipo_nomina in (1,7) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1009 ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1009 and f.cod_tipo_nomina in (1,7) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1014 ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1014 and f.cod_tipo_nomina in (1,2,3,8) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1014 ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1014 and f.cod_tipo_nomina in (1,2,3,8) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1015 ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1015 and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1015 ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1015 and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep in (1039) ) `);
-    //condition = condition.concat(`OR ( f.cod_dep in (1039) and f.cod_tipo_nomina in (1) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep in (1039) ) `);
+    condition = condition.concat(`OR ( f.cod_dep in (1039) and f.cod_tipo_nomina in (1) ) `);
 
-    condition = condition.concat(`OR ( f.cod_dep=1040 ) `);
-    //condition = condition.concat(`OR ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) `);
+    //condition = condition.concat(`OR ( f.cod_dep=1040 ) `);
+    condition = condition.concat(`OR ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) `);
 
-    condition = condition.concat(
-      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) ) `
-    );
     /*condition = condition.concat(
-      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
+      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) ) `
     );*/
+    condition = condition.concat(
+      `OR ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) `
+    );
 
     const CURRENT_YEAR = new Date().getFullYear();
     const sqlQuery = `SELECT  f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre,
@@ -725,7 +724,7 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
 router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
   try {
     const CURRENT_YEAR = new Date().getFullYear();
-    const sqlQuery = `SELECT  
+    /*const sqlQuery = `SELECT  
       COUNT(f.cedula_identidad),
       f.deno_cod_secretaria as denominacion
       FROM v_cnmd06_fichas_2 as f 
@@ -775,8 +774,8 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) ) OR 
       ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) ) OR 
       ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) ) ) 
-      GROUP BY f.deno_cod_secretaria`;
-    /*const sqlQuery = `SELECT  
+      GROUP BY f.deno_cod_secretaria`;*/
+    const sqlQuery = `SELECT  
       COUNT(f.cedula_identidad),
       f.deno_cod_secretaria as denominacion
       FROM v_cnmd06_fichas_2 as f 
@@ -826,8 +825,8 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and t.cod_tipo_nomina in (1,2,3) ) OR 
       ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and t.cod_tipo_nomina in (1,2,3) ) OR 
       ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and t.cod_tipo_nomina in (1,2,3) ) ) 
-      GROUP BY f.deno_cod_secretaria`;*/
-    const sqlQuery_dep = `SELECT  
+      GROUP BY f.deno_cod_secretaria`;
+    /*const sqlQuery_dep = `SELECT  
       COUNT(f.cedula_identidad),
       f.denominacion_dependencia as denominacion
       FROM v_cnmd06_fichas_2 as f 
@@ -842,8 +841,8 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       ( f.cod_dep in (1039) ) OR 
       ( f.cod_dep=1040 ) OR 
       ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) ) ) 
-      GROUP BY f.denominacion_dependencia`;
-    /*const sqlQuery_dep = `SELECT  
+      GROUP BY f.denominacion_dependencia`;*/
+    const sqlQuery_dep = `SELECT  
       COUNT(f.cedula_identidad),
       f.denominacion_dependencia as denominacion
       FROM v_cnmd06_fichas_2 as f 
@@ -858,7 +857,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
       ( f.cod_dep in (1039) and f.cod_tipo_nomina in (1) ) OR 
       ( f.cod_dep=1040 and f.cod_tipo_nomina in (1,2,3) ) OR 
       ( f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1010,1011,1012,1013,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1041,1042,1043,1044,1045,1046) and f.cod_tipo_nomina in (1,2) ) ) 
-      GROUP BY f.denominacion_dependencia`;*/
+      GROUP BY f.denominacion_dependencia`;
 
     const query = await unifiedQuery({ sqlQuery, table: "f." });
     const query_dep = await unifiedQuery({ sqlQuery: sqlQuery_dep, table: "f." });
