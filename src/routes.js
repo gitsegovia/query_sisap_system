@@ -1,7 +1,7 @@
 import express from "express";
 import unifiedQuery, { identifiedQuery, specificQuery } from "./sequelizedb";
 
-const IS_ONLY_LN = true;
+const IS_ONLY_LN = false;
 
 function diffYear(date) {
   const current = new Date();
@@ -912,7 +912,7 @@ router.get("/hoja_vida/cantidad_empleados", async (req, res) => {
 
 router.get("/sisap/lista_dep/", async (req, res) => {
   try {
-    const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 and cod_dep not in (1020,1021,1024,1025,1026) ORDER BY cod_dep`;
+    const sqlQueryDep = `SELECT cod_dep, denominacion FROM arrd05 WHERE cod_dep>=1000 and cod_dep not in (1020,1024,1025,1026) ORDER BY cod_dep`;
     const sqlQuerySec = `SELECT DISTINCT (
       CASE 
         WHEN c.cod_secretaria < '10' 
