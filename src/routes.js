@@ -479,26 +479,77 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (cod_dep < 1000 || cod_dep == 1024 || cod_dep == 1025) {
       return null;
     }
-    if (cod_dep == 1009) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)` : `f.cod_dep=${cod_dep}`;
+    if (cod_dep == 1000) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11)`;
     }
     if (cod_dep == 1003) {
       return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12,13,14,15,16,17,18,19)`;
     }
+    if (cod_dep == 1004) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9)`;
+    }
+    if (cod_dep == 1005) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9,10)`;
+    }
+    if (cod_dep == 1006) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12)`;
+    }
+    if (cod_dep == 1007) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7)`;
+    }
+    if (cod_dep == 1008) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13)`;
+    }
+    if (cod_dep == 1009) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11)`;
+    }
+    if (cod_dep == 1010) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11)`;
+    }
+    if (cod_dep == 1011) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8)`;
+    }
+    if (cod_dep == 1012) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7)`;
+    }
     if (cod_dep == 1014) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)` : `f.cod_dep=${cod_dep}`;
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13,14)`;
     }
     if (cod_dep == 1015) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)` : `f.cod_dep=${cod_dep}`;
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11,12,13)`;
+    }
+    if (cod_dep == 1016) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11,12)`;
+    }
+    if (cod_dep == 1021) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11)`;
+    }
+    if (cod_dep == 1022) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9)`;
+    }
+    if (cod_dep == 1023) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11)`;
+    }
+    if (cod_dep == 1027) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8)`;
     }
     if (cod_dep == 1028) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)` : `f.cod_dep=${cod_dep}`;
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10)`;
+    }
+    if (cod_dep == 1035) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9)`;
+    }
+    if (cod_dep == 1037) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9)`;
     }
     if (cod_dep == 1039) {
       return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)` : `f.cod_dep=${cod_dep}`;
     }
     if (cod_dep == 1040) {
       return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3)` : `f.cod_dep=${cod_dep}`;
+    }
+    if (cod_dep == 1041) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9)`;
     }
 
     return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep}`;
