@@ -222,8 +222,11 @@ router.get("/hoja_vida/consulta/:cedula", async (req, res) => {
     let beneficiario = "";
     const CURRENT_YEAR = new Date().getFullYear();
     const where = IS_ONLY_LN
-      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`
+      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`
       : `f.cedula_identidad = ${cedula} and t.ano = ${CURRENT_YEAR} and f.condicion_actividad_ficha = 1 [condition_ext]`;
+    // const where = IS_ONLY_LN
+    //   ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`
+    //   : `f.cedula_identidad = ${cedula} and t.ano = ${CURRENT_YEAR} and f.condicion_actividad_ficha = 1 [condition_ext]`;
 
     const sqlQuery = `SELECT f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre, 
     f.deno_cod_secretaria, f.cod_secretaria, f.deno_cod_direccion, f.cod_direccion, f.deno_cod_division, f.cod_division, f.deno_cod_departamento, f.cod_departamento, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha, f.fecha_nacimiento, f.sexo, CASE 
@@ -342,8 +345,11 @@ router.get("/hoja_vida/consulta_foto/:cedula", async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
 
     const where = IS_ONLY_LN
-      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`
-      : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
+      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`
+      : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
+    // const where = IS_ONLY_LN
+    //   ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`
+    //   : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
 
     const sqlQuery = `SELECT f.cedula_identidad
     FROM v_cnmd06_fichas_2 as f 
@@ -448,114 +454,166 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       }
       if (codSplit[1] != "00") {
         return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "01") {
         return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "10") {
         return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "13") {
         return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "15") {
         return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
 
       return IS_ONLY_LN
-        ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29)`
-        : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9)`;
+        ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep < 1000 || cod_dep == 1024 || cod_dep == 1025) {
       return null;
     }
     if (cod_dep == 1000) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1003) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12,13,14,15,16,17,18,19)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12,13,14,15,16,17,18,19) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1004) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1005) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9,10)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9,10) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1006) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1007) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1008) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1009) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1010) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1011) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1012) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1014) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13,14)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11,12,13,14) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1015) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11,12,13)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11,12,13) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1016) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11,12)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11,12) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1021) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1022) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
     }
     if (cod_dep == 1023) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1027) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1028) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1035) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1037) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1039) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1)` : `f.cod_dep=${cod_dep}`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1040) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3)` : `f.cod_dep=${cod_dep}`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1041) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep == 1043) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4)`;
+      return IS_ONLY_LN
+        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
 
-    return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2)` : `f.cod_dep=${cod_dep}`;
+    return IS_ONLY_LN
+      ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
+      : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
   };
 
   const getConditionDB = () => {
@@ -629,7 +687,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext] ORDER BY t.cod_tipo_nomina`;
+    where ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext] ORDER BY t.cod_tipo_nomina`;
 
     const query = await specificQuery({ sqlQuery, table: "f.", db: db });
     if (query.length > 0) {
