@@ -627,13 +627,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       cod_dep == 1006 ||
       cod_dep == 1027 ||
       cod_dep == 1028 ||
-      cod_dep == 1035 ||
       cod_dep == 1036 ||
       cod_dep == 1037 ||
       cod_dep == 1038 ||
       cod_dep == 1039 ||
       cod_dep == 1040 ||
-      cod_dep == 1041 ||
       cod_dep == 1042 ||
       cod_dep == 1043 ||
       cod_dep == 1045 ||
