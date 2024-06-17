@@ -455,32 +455,32 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
       if (codSplit[1] != "00") {
         return IS_ONLY_LN
           ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "01") {
         return IS_ONLY_LN
           ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "10") {
         return IS_ONLY_LN
           ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "13") {
         return IS_ONLY_LN
           ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
       if (codSplit[0] == "15") {
         return IS_ONLY_LN
           ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
       }
 
       return IS_ONLY_LN
         ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+        : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
     }
     if (cod_dep < 1000 || cod_dep == 1024 || cod_dep == 1025) {
       return null;
@@ -773,7 +773,7 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     condition = IS_ONLY_LN
       ? condition.concat(`( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) ) `)
       : condition.concat(
-          `( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+          `( f.cod_dep=1 and f.cod_secretaria=1 and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
         );
     //condition = ;
 
@@ -782,7 +782,7 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
       condition = IS_ONLY_LN
         ? condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) ) `)
         : condition.concat(
-            `OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+            `OR ( f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
           );
       //condition = ;
     });
@@ -790,28 +790,28 @@ router.get("/hoja_vida/lista_empleados/", async (req, res) => {
     condition = IS_ONLY_LN
       ? condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) ) `)
       : condition.concat(
-          `OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+          `OR ( f.cod_dep=1 and f.cod_secretaria=10 and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
         );
     //condition = ;
 
     condition = IS_ONLY_LN
       ? condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) ) `)
       : condition.concat(
-          `OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+          `OR ( f.cod_dep=1 and f.cod_secretaria=13 and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
         );
     //condition = ;
 
     condition = IS_ONLY_LN
       ? condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) ) `)
       : condition.concat(
-          `OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+          `OR ( f.cod_dep=1 and f.cod_secretaria=15 and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
         );
     //condition = ;
 
     condition = IS_ONLY_LN
       ? condition.concat(`OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina in (1,2,3,29) ) `)
       : condition.concat(
-          `OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9) ) `
+          `OR ( f.cod_dep=1 and f.cod_secretaria in (02,03,05,06,07,08,09,11,12,14,16,17,18,19,20,21) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,37,38,39,40,9,6) ) `
         );
     //condition = ;
 
