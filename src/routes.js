@@ -613,6 +613,9 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
         ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
         : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4)`;
     }
+    if (cod_dep == 1046) {
+      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)` : ``;
+    }
     return IS_ONLY_LN
       ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
       : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
@@ -654,6 +657,11 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
   const condition_dep = getCondition();
   if (condition_dep === null) {
     res.status(404).send("Dependencia requerida");
+    return false;
+  }
+
+  if (condition_dep === "") {
+    res.status(404).send({ message: "No existe resultados", error: "" });
     return false;
   }
 
