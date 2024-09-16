@@ -1145,7 +1145,7 @@ router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, r
       return `ano>=2021 and cod_dep!=1`;
     }
 
-    return `cod_dep/=${cod_dep}`;
+    return `cod_dep!=${cod_dep}`;
   };
 
   try {
