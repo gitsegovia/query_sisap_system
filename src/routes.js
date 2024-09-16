@@ -1222,4 +1222,34 @@ router.get("/fichas/consulta_ficha_cargos/:cedula/:cod_dep", async (req, res) =>
   }
 });
 
+router.get("/fichas/consulta_ficha_otros_experiencias_administrativas/:cedula", async (req, res) => {
+  const { cedula, cod_dep } = req.params;
+
+  if (!cedula) {
+    res.status(404).send("Cedula requerida");
+    return false;
+  }
+
+  try {
+    const sqlQuery = `SELECT 
+ cargo_desempenado,
+  entidad_federal
+  FROM cnmd06_datos_experiencia_administrativa
+  where cedula=${cedula}`;
+
+    const query = await unifiedQuery({ sqlQuery });
+
+    var list = [];
+    query.forEach((element) => {
+      if (!list.some((e) => e.cargo_desempenado === element.cargo_desempenado && e.entidad_federal === element.entidad_federal)) {
+        list.push(element);
+      }
+    });
+    res.json(list);
+    return true;
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 export default router;
