@@ -1142,10 +1142,10 @@ router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, r
 
   const getConditionDep = () => {
     if (cod_dep.includes("-")) {
-      return `ano>=2021 and cod_dep!=1`;
+      return `cod_dep!=1`;
     }
 
-    return `cod_dep!=${cod_dep}`;
+    return `((cod_dep=1 and ano>=2021) or cod_dep!=${cod_dep})`;
   };
 
   try {
@@ -1157,7 +1157,7 @@ router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, r
     FROM (SELECT cod_dep, cod_tipo_nomina,
        cod_cargo, cod_ficha, cedula_identidad
   FROM cnmd08_historia_trabajador
-  where ${getConditionDep()} and cedula_identidad=${cedula}
+  where cedula_identidad=${cedula} and ${getConditionDep()}
   group by cod_dep, cod_tipo_nomina, 
        cod_cargo, cod_ficha, cedula_identidad) as fb
     LEFT JOIN cnmd06_fichas as f ON f.cod_ficha=fb.cod_ficha and f.cod_cargo=fb.cod_cargo and f.cedula_identidad=fb.cedula_identidad
@@ -1168,13 +1168,8 @@ router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, r
 
     const query = await unifiedQuery({ sqlQuery, table: "fb." });
 
-    if (query.length > 0) {
-      res.json(query);
-      return true;
-    } else {
-      res.status(404).send({ message: "No existe resultados", error: "" });
-      return false;
-    }
+    res.json(query);
+    return true;
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
   }
