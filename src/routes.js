@@ -2,6 +2,7 @@ import express from "express";
 import unifiedQuery, { identifiedQuery, specificQuery } from "./sequelizedb";
 
 const IS_ONLY_LN = false;
+const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046, 1047];
 
 function diffYear(date) {
   const current = new Date();
@@ -1132,7 +1133,7 @@ router.get("/fichas/consulta/:cedula", async (req, res) => {
   }
 });
 
-router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, res) => {
+router.get("/fichas/consulta_expediente/:cedula/:cod_dep", async (req, res) => {
   const { cedula, cod_dep } = req.params;
 
   if (!cedula) {
@@ -1140,112 +1141,50 @@ router.get("/fichas/consulta_ficha_otros_cargos/:cedula/:cod_dep", async (req, r
     return false;
   }
 
-  const getConditionDep = () => {
-    if (cod_dep.includes("-")) {
-      return `cod_dep!=1`;
-    }
+  let db = 1;
 
-    return `((cod_dep=1 and ano>=2021) or cod_dep!=${cod_dep})`;
-  };
-
-  try {
-    const sqlQuery = `SELECT 
- fb.cedula_identidad, dp.primer_nombre || ' ' || dp.segundo_nombre || ' ' || dp.primer_apellido || ' ' || dp.segundo_apellido as nombre, 
-    fb.cod_dep,(SELECT denominacion from arrd05 where cod_dep=fb.cod_dep) as dependencia, fb.cod_tipo_nomina, hn.denominacion, fb.cod_cargo, fb.cod_ficha, f.condicion_actividad, h.cod_puesto, f.fecha_ingreso, f.fecha_movimiento,
-    ( SELECT devolver_denominacion_puesto(( SELECT xy.clasificacion_personal FROM cnmd01 xy
-      WHERE xy.cod_dep = fb.cod_dep AND xy.cod_tipo_nomina = fb.cod_tipo_nomina), h.cod_puesto) AS devolver_denominacion_puesto) AS demonimacion_puesto
-    FROM (SELECT cod_dep, cod_tipo_nomina,
-       cod_cargo, cod_ficha, cedula_identidad
-  FROM cnmd08_historia_trabajador
-  where cedula_identidad=${cedula} and ${getConditionDep()}
-  group by cod_dep, cod_tipo_nomina, 
-       cod_cargo, cod_ficha, cedula_identidad) as fb
-    LEFT JOIN cnmd06_fichas as f ON f.cod_ficha=fb.cod_ficha and f.cod_cargo=fb.cod_cargo and f.cedula_identidad=fb.cedula_identidad
-    LEFT JOIN cnmd05 as h ON h.cod_dep=fb.cod_dep and h.cod_tipo_nomina=fb.cod_tipo_nomina and h.cod_cargo=fb.cod_cargo
-    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=fb.cod_dep and hn.cod_tipo_nomina=fb.cod_tipo_nomina
-    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=fb.cedula_identidad 
-    where h.cod_puesto>0 and f.condicion_actividad not in (1) and fb.cedula_identidad =${cedula} [condition_ext]`;
-
-    const query = await unifiedQuery({ sqlQuery, table: "fb." });
-
-    res.json(query);
-    return true;
-  } catch (error) {
-    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  if (DEP_ENTE.includes(cod_dep)) {
+    db = 2;
   }
-});
 
-router.get("/fichas/consulta_ficha_cargos/:cedula/:cod_dep", async (req, res) => {
-  const { cedula, cod_dep } = req.params;
-
-  if (!cedula) {
-    res.status(404).send("Cedula requerida");
-    return false;
+  if (cod_dep == 1035) {
+    db = 3;
   }
-  const getConditionDep = () => {
-    if (cod_dep.includes("-")) {
-      return `ano>=2021 and cod_dep=1`;
-    }
 
-    return `cod_dep=${cod_dep}`;
-  };
-
-  try {
-    const sqlQuery = `SELECT 
- fb.cedula_identidad, dp.primer_nombre || ' ' || dp.segundo_nombre || ' ' || dp.primer_apellido || ' ' || dp.segundo_apellido as nombre, 
-    fb.cod_dep,(SELECT denominacion from arrd05 where cod_dep=fb.cod_dep) as dependencia, fb.cod_tipo_nomina, hn.denominacion, fb.cod_cargo, fb.cod_ficha, f.condicion_actividad, h.cod_puesto, f.fecha_ingreso, f.fecha_movimiento,
-    ( SELECT devolver_denominacion_puesto(( SELECT xy.clasificacion_personal FROM cnmd01 xy
-      WHERE xy.cod_dep = fb.cod_dep AND xy.cod_tipo_nomina = fb.cod_tipo_nomina), h.cod_puesto) AS devolver_denominacion_puesto) AS demonimacion_puesto
-    FROM (SELECT cod_dep, cod_tipo_nomina,
-       cod_cargo, cod_ficha, cedula_identidad
-  FROM cnmd08_historia_trabajador
-  where ${getConditionDep()} and cedula_identidad=${cedula}
-  group by cod_dep, cod_tipo_nomina, 
-       cod_cargo, cod_ficha, cedula_identidad) as fb
-    LEFT JOIN cnmd06_fichas as f ON f.cod_ficha=fb.cod_ficha and f.cod_cargo=fb.cod_cargo and f.cedula_identidad=fb.cedula_identidad
-    LEFT JOIN cnmd05 as h ON h.cod_dep=fb.cod_dep and h.cod_tipo_nomina=fb.cod_tipo_nomina and h.cod_cargo=fb.cod_cargo
-    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=fb.cod_dep and hn.cod_tipo_nomina=fb.cod_tipo_nomina
-    FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=fb.cedula_identidad 
-    where h.cod_puesto>0 and f.condicion_actividad not in (1) and fb.cedula_identidad =${cedula} [condition_ext]`;
-
-    const query = await unifiedQuery({ sqlQuery, table: "fb." });
-
-    if (query.length > 0) {
-      res.json(query);
-      return true;
-    } else {
-      res.status(404).send({ message: "No existe resultados", error: "" });
-      return false;
-    }
-  } catch (error) {
-    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
-  }
-});
-
-router.get("/fichas/consulta_ficha_otros_experiencias_administrativas/:cedula", async (req, res) => {
-  const { cedula, cod_dep } = req.params;
-
-  if (!cedula) {
-    res.status(404).send("Cedula requerida");
-    return false;
+  if (cod_dep == 1041) {
+    db = 4;
   }
 
   try {
-    const sqlQuery = `SELECT 
+    const sqlQuery_exp_adm = `SELECT 
  cargo_desempenado,
-  entidad_federal
+  entidad_federal,
+  fecha_ingreso,
+  fecha_egreso
   FROM cnmd06_datos_experiencia_administrativa
-  where cedula=${cedula}`;
+  where cedula=${cedula} order by fecha_ingreso DESC`;
 
-    const query = await unifiedQuery({ sqlQuery });
+    const query_exp_adm = await specificQuery({ sqlQuery: sqlQuery_exp_adm, db });
 
-    var list = [];
-    query.forEach((element) => {
-      if (!list.some((e) => e.cargo_desempenado === element.cargo_desempenado && e.entidad_federal === element.entidad_federal)) {
-        list.push(element);
-      }
+    const sqlQuery_formacion_prof = `SELECT 
+ deno_curso, deno_institucion, duracion, desde, hasta, observaciones
+  FROM v_cnmd06_datos_formacion_profesional
+  where cedula=${cedula} order by desde DESC`;
+
+    const query_formacion_prof = await specificQuery({ sqlQuery: sqlQuery_formacion_prof, db });
+
+    const sqlQuery_educativos = `SELECT 
+ deno_nivel, deno_institucion, fecha_inicio, fecha_culminacion, observaciones
+  FROM v_cnmd06_datos_educativos
+  where cedula=${cedula} order by fecha_inicio DESC`;
+
+    const query_educativos = await specificQuery({ sqlQuery: sqlQuery_educativos, db });
+
+    res.json({
+      expediente_administrativo: query_exp_adm,
+      formacion_profesional: query_formacion_prof,
+      formacion_educativa: query_educativos,
     });
-    res.json(list);
     return true;
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });

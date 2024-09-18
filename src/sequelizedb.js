@@ -29,7 +29,8 @@ sequelizeDB4
   .catch(() => console.log(`Error de Conexión a ${config_db4.host} ${config_db4.database}`));
 
 const CONDITION_DB1 = "and cod_dep not in (1006,1021, 1027, 1028, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1045, 1046)";
-const CONDITION_DB2 = "and cod_dep in (1006,1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046)";
+const CONDITION_DB2 = "and cod_dep in (1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046, 1047)";
+
 const CONDITION_DB3 = "and cod_dep in (1035)";
 const CONDITION_DB4 = "and cod_dep in (1041)";
 
