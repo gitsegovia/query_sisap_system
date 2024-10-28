@@ -1191,4 +1191,35 @@ router.get("/fichas/consulta_expediente/:cedula/:cod_dep", async (req, res) => {
   }
 });
 
+//RUTAS INTERNAS SISAP ENTE A SISAP PRINCIPAL
+
+router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:cod_sub_prog", async (req, res) => {
+  try {
+    //const { cod_sector, cod_ } = req.params;
+    const { ano, cod_sector, cod_programa, cod_sub_prog } = req.params;
+
+    const db = 1;
+    const sqlQuery = `SELECT cf.cod_dep, cf.ano, cf.cod_sector, cf.cod_programa, cf.cod_sub_prog, cf.cod_activ_obra, 
+       cf.cod_partida, cf.cod_generica, cf.cod_especifica, cf.cod_sub_espec, cf.cod_auxiliar, 
+       (cf.asignacion_anual+cf.aumento_traslado_anual+cf.credito_adicional_anual+cf.nacionales_anual-cf.disminucion_traslado_anual-cf.rebaja_anual) as asignacion,
+       cf.compromiso_anual, 
+       (cf.asignacion_anual+cf.aumento_traslado_anual+cf.credito_adicional_anual+cf.nacionales_anual-cf.disminucion_traslado_anual-cf.rebaja_anual-cf.compromiso_anual) as disponible,
+       vcf.deno_activ_obra, vcf.deno_partida, vcf.deno_auxiliar 
+  FROM cfpd05 as cf 
+  INNER JOIN v_cfpd05_denominaciones as vcf ON cf.cod_dep=vcf.cod_dep AND cf.ano=vcf.ano AND cf.cod_sector=vcf.cod_sector 
+             AND cf.cod_programa=vcf.cod_programa AND cf.cod_sub_prog=vcf.cod_sub_prog AND cf.cod_activ_obra=vcf.cod_activ_obra 
+             AND cf.cod_partida=vcf.cod_partida AND cf.cod_generica=vcf.cod_generica AND cf.cod_especifica=vcf.cod_especifica 
+             AND cf.cod_sub_espec=vcf.cod_sub_espec AND cf.cod_auxiliar=vcf.cod_auxiliar 
+  WHERE cf.cod_dep=1 AND cf.cod_partida=407 AND cf.ano=${ano} AND cf.cod_sector=${cod_sector} AND cf.cod_programa=${cod_programa} AND cf.cod_sub_prog=${cod_sub_prog}`;
+
+    const query = await specificQuery({ sqlQuery: sqlQuery, db });
+
+    res.json({
+      query,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 export default router;

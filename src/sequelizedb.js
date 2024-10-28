@@ -1,8 +1,15 @@
 import { Sequelize } from "sequelize";
+import config_db0 from "./config_db0";
 import config_db1 from "./config_db1";
 import config_db2 from "./config_db2";
 import config_db3 from "./config_db3";
 import config_db4 from "./config_db4";
+
+let sequelizeDB0 = new Sequelize(config_db0);
+sequelizeDB0
+  .authenticate()
+  .then(() => console.log(`Conexión establecida a ${config_db0.host} ${config_db0.database}`))
+  .catch((e) => console.log(e, `Error de Conexión a ${config_db0.host} ${config_db0.database}`));
 
 let sequelizeDB1 = new Sequelize(config_db1);
 sequelizeDB1
@@ -71,6 +78,9 @@ export async function specificQuery({ sqlQuery, table = "", db = 1 }) {
   try {
     let result_db = [];
     switch (db) {
+      case 0:
+        [result_db] = await sequelizeDB0.query(sqlQuery);
+        break;
       case 2:
         [result_db] = await sequelizeDB2.query(sqlQuery.replace("[condition_ext]", CONDITION_DB2.replace("cod_dep", `${table}cod_dep`)));
         break;
