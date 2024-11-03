@@ -1224,7 +1224,6 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
 
 router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res) => {
   try {
-    console.log(req.body);
     const { rif, concepto, deno_dependencia, monto_solicitud, id_send } = req.body;
 
     const db = 0;
@@ -1351,6 +1350,8 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
       numero_compromiso,
     });
   } catch (error) {
+    const db = 0;
+    console.log(error);
     await specificQuery({ sqlQuery: "ROLLBACK SISAP_COMPROMISO", db });
     res.status(500).json({ message: "Error en la consulta unificada", error: error });
   }
