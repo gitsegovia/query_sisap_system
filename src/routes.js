@@ -1223,11 +1223,9 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
 });
 
 router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res) => {
+  const db = 0;
   try {
     const { rif, concepto, deno_dependencia, monto_solicitud, id_send } = req.body;
-
-    const db = 0;
-
     const current = new Date();
     const ano = current.getFullYear();
     const fecha_documento = current.getFullYear() + "-" + current.getMonth() + "-" + current.getDate();
@@ -1250,7 +1248,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
-    const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01');`;
+    const sqlQuery_i_cuerpo = `BEGIN; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01');`;
 
     await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
 
@@ -1344,15 +1342,14 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
 
     await specificQuery({ sqlQuery: `UPDATE cepd01_compromiso_numero SET situacion=3 WHERE cod_dep=1 AND ano_compromiso=${ano} AND numero_compromiso=${numero_compromiso}`, db });
 
-    await specificQuery({ sqlQuery: "COMMIT SISAP_COMPROMISO", db });
+    await specificQuery({ sqlQuery: "COMMIT;", db });
 
     res.json({
       numero_compromiso,
     });
   } catch (error) {
-    const db = 0;
     console.log(error);
-    await specificQuery({ sqlQuery: "ROLLBACK SISAP_COMPROMISO", db });
+    await specificQuery({ sqlQuery: "ROLLBACK;", db });
     res.status(500).json({ message: "Error en la consulta unificada", error: error });
   }
 });
