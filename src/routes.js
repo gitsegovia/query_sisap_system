@@ -1240,7 +1240,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.urlencoded({ extended: t
     const res_numero = await specificQuery({ sqlQuery: sqlQuery_numero, db });
 
     if (res_numero.length == 0) {
-      res.status(500).send({ message: "No existe numero de compromiso disponible" });
+      res.status(404).send({ message: "No existe numero de compromiso disponible" });
       return false;
     }
 
