@@ -1241,16 +1241,55 @@ router.post("/sisap/solicitud_recurso/guardar", express.urlencoded({ extended: t
       fecha_proceso_anulacion
      */
     //const { rif, beneficiario, concepto, monto_total } = req.body;
-    console.log(req.body);
+    /**
+      {
+        ano: '2024',
+        numero_solicitud: '02',
+        fecha_solicitud: '03/11/2024',
+        deno_dependencia: 'FUNDACIÓN PATRIA SOCIALISTA (FPS)',
+        denominacion_activ_1: 'GESTIÓN ADMINISTRATIVA DE LA FUNDACIÓN PATRIA SOCIALISTA',
+        partida_1: '13-1-2-51-407-1-3-7-1',
+        denominacion_1: 'FUNDACIÓN PATRIA SOCIALISTA ',
+        monto_asignado_1: '502.000,00',
+        monto_solicitado_1: '125.499,99',
+        monto_disponible_1: '376.500,01',
+        monto_solicitar_1: '10,00',
+        denominacion_activ_2: 'PATRIA SOCIALISTA (PERSONAL EN PUESTO NO PERMANENTE)',
+        partida_2: '13-1-2-52-407-3-7-0-1',
+        denominacion_2: '',
+        monto_asignado_2: '5.537.881,00',
+        monto_solicitado_2: '0,00',
+        monto_disponible_2: '5.537.881,00',
+        monto_solicitar_2: '10,00',
+        denominacion_activ_3: 'PATRIA SOCIALISTA (FCI)',
+        partida_3: '13-1-2-53-407-1-3-7-12',
+        denominacion_3: 'REHABILITACIÓN DE LA FACHADA DEL HOSPITAL DR RAFAEL ZAMORA AREVALO, PARROQUIA VALLE DE LA PASCUA ESTADO BOLIVIARIANO DE GUARICO ',
+        monto_asignado_3: '2.176.872,65',
+        monto_solicitado_3: '2.176.827,65',
+        monto_disponible_3: '45,00',
+        monto_solicitar_3: '0',
+        denominacion_activ_4: 'PATRIA SOCIALISTA (PROYECTOS ORDINARIO / PROYECTOS ESTRATEGICOS)',
+        partida_4: '13-1-2-54-407-1-3-7-1',
+        denominacion_4: 'FUNDACIÓN PATRIA SOCIALISTA (PROYECTOS ORDINARIOS / PROYECTOS ESTRATEGICOS)',
+        monto_asignado_4: '21.111.188,33',
+        monto_solicitado_4: '21.111.002,99',
+        monto_disponible_4: '185,34',
+        monto_solicitar_4: '10,00',
+        index: '4',
+        concepto: 'KKKKK',
+        salir: ''
+      }
 
-    res.json({ message: "ok", data: req.body });
-    /*
+     */
+    const { rif, concepto, deno_dependencia, monto_solicitud, id_send } = req.body;
+
     const db = 0;
 
     const current = new Date();
     const ano = current.getFullYear();
     const fecha_documento = current.getFullYear() + "-" + current.getMonth() + "-" + current.getDate();
-    const concepto_cuerpo = "BENEFICIARIO: " + beneficiario + " POR CONCEPTO DE: " + concepto;
+    const concepto_cuerpo = "BENEFICIARIO: " + deno_dependencia + " POR CONCEPTO DE: " + concepto;
+    const monto_total = monto_solicitud.replace(".", "").replace(".", ",");
 
     const sqlQuery_numero = `SELECT numero_compromiso FROM cepd01_compromiso_numero WHERE cod_dep=1 AND ano_compromiso=${ano} AND situacion=1 ORDER BY numero_compromiso ASC LIMIT 1`;
 
@@ -1268,18 +1307,99 @@ router.post("/sisap/solicitud_recurso/guardar", express.urlencoded({ extended: t
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
-    const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${beneficiario}',2,'${fecha_documento}','1900-01-01')`;
+    const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01')`;
 
     //await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
 
-    /*cepd01_compromiso_numero;
-    cepd01_compromiso_cuerpo;
-    cepd01_compromiso_partidas;
-    cepd01_compromiso_poremitir;* /
+    const camposT3 =
+      "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,ano,cod_sector,cod_programa,cod_sub_prog,cod_proyecto,cod_activ_obra,cod_partida,cod_generica,cod_especifica,cod_sub_espec,cod_auxiliar,monto,numero_control_compromiso";
+
+    let str_mes = "";
+    switch (current.getMonth()) {
+      case 1:
+        str_mes = "ene";
+        break;
+      case 2:
+        str_mes = "feb";
+        break;
+      case 3:
+        str_mes = "mar";
+        break;
+      case 4:
+        str_mes = "abr";
+        break;
+      case 5:
+        str_mes = "may";
+        break;
+      case 6:
+        str_mes = "jun";
+        break;
+      case 7:
+        str_mes = "jul";
+        break;
+      case 8:
+        str_mes = "ago";
+        break;
+      case 9:
+        str_mes = "sep";
+        break;
+      case 10:
+        str_mes = "oct";
+        break;
+      case 11:
+        str_mes = "nov";
+        break;
+
+      default:
+        str_mes = "dic";
+        break;
+    }
+    $compromiso_mes = "compromiso_" + str_mes;
+
+    let values = "";
+    let sql_update132 = "";
+    let sql_insert_cfpd21 = "";
+    for (let index = 1; index <= id_send; index++) {
+      const part_split = req.body["partida_" + index].split("-");
+      const monto_partida = req.body["monto_solicitar_" + index].replace(".", "").replace(".", ",");
+
+      const cod_sector = part_split[0];
+      const cod_programa = part_split[1];
+      const cod_sub_prog = part_split[2];
+      const cod_proyecto = 0;
+      const cod_activ_obra = part_split[3];
+      const cod_partida = part_split[4];
+      const cod_generica = part_split[5];
+      const cod_especifica = part_split[6];
+      const cod_sub_espec = part_split[7];
+      let cod_auxiliar = 0;
+      if (part_split.length > 8) {
+        cod_auxiliar = part_split[8];
+      }
+      values += `(1,12,30,12,1,${ano},${numero_compromiso},${ano},${cod_sector},${cod_programa},${cod_sub_prog},${cod_proyecto},${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${monto_partida},0)`;
+      if (index < id_send) {
+        values += ",";
+      } else {
+        values += ";";
+      }
+
+      //MOTOR PRESUPUESTARIO
+      sql_update132 += `UPDATE cfpd05 set compromiso_anual=compromiso_anual+${monto_partida}, ${compromiso_mes}=${compromiso_mes}+${monto_partida} WHERE cod_dep=1 and ano=${ano} and cod_sector=${cod_sector} and cod_programa=${cod_programa} and cod_sub_prog=${cod_sub_prog} and cod_activ_obra=${cod_activ_obra} and cod_partida=${cod_partida} and cod_generica=${cod_generica} and cod_especifica=${cod_especifica} and cod_sub_espec=${cod_sub_espec} and cod_auxiliar=${cod_auxiliar};`;
+
+      const ccp = `REGISTRO DE COMPROMISO AÑO: ${ann}, NUMERO: ${numero_compromiso} DE FECHA: ${fecha_documento}, ${concepto_cuerpo}`;
+      sql_insert_cfpd21 += `INSERT INTO cfpd21 (cod_presi, cod_entidad, cod_tipo_inst, cod_inst, cod_dep, ano, cod_sector, cod_programa, cod_sub_prog, cod_proyecto, cod_activ_obra, cod_partida, cod_generica, cod_especifica, cod_sub_espec, cod_auxiliar, numero_asiento_compromiso, monto, fecha, concepto) VALUES(1,12,30,12,1,${ano},${cod_sector},${cod_programa},${cod_sub_prog},0,${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${numero_compromiso},${monto_partida},'${fecha_documento}','${ccp}');`;
+    }
+    const sqlQuery_i_partidas = `INSERT INTO cepd01_compromiso_partidas (${camposT3}) VALUES ${values}`;
+    const sqlQuery_i_update_cfpd05 = sql_update132;
+    const sqlQuery_i_insert_cfpd21 = sql_insert_cfpd21;
+
     res.json({
       numero_compromiso,
       sqlQuery_i_cuerpo,
-    });*/
+      sqlQuery_i_partidas,
+      sqlQuery_i_update_cfpd05,
+      sqlQuery_i_insert_cfpd21,
+    });
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
   }
