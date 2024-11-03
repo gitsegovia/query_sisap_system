@@ -1222,7 +1222,7 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
   }
 });
 
-router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res) => {
+router.post("/sisap/solicitud_recurso/guardar", express.urlencoded({ extended: true }), async (req, res) => {
   try {
     //13-1-2-53-407-1-3-7-12
     /**
