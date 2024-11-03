@@ -1298,7 +1298,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
         str_mes = "dic";
         break;
     }
-    $compromiso_mes = "compromiso_" + str_mes;
+    let compromiso_mes = "compromiso_" + str_mes;
 
     let values = "";
     let sql_update132 = "";
