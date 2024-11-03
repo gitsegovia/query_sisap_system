@@ -1224,63 +1224,7 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
 
 router.post("/sisap/solicitud_recurso/guardar", express.urlencoded({ extended: true }), async (req, res) => {
   try {
-    //13-1-2-53-407-1-3-7-12
-    /**
-      ano
-      numero_documento
-      tipo_documento
-      fecha_documento
-      tipo_recurso
-      condicion_juridica
-      concepto
-      beneficiario
-      concepto
-      condicion_documento
-      num_asiento
-      fecha_proceso_registro
-      fecha_proceso_anulacion
-     */
-    //const { rif, beneficiario, concepto, monto_total } = req.body;
-    /**
-      {
-        ano: '2024',
-        numero_solicitud: '02',
-        fecha_solicitud: '03/11/2024',
-        deno_dependencia: 'FUNDACIÓN PATRIA SOCIALISTA (FPS)',
-        denominacion_activ_1: 'GESTIÓN ADMINISTRATIVA DE LA FUNDACIÓN PATRIA SOCIALISTA',
-        partida_1: '13-1-2-51-407-1-3-7-1',
-        denominacion_1: 'FUNDACIÓN PATRIA SOCIALISTA ',
-        monto_asignado_1: '502.000,00',
-        monto_solicitado_1: '125.499,99',
-        monto_disponible_1: '376.500,01',
-        monto_solicitar_1: '10,00',
-        denominacion_activ_2: 'PATRIA SOCIALISTA (PERSONAL EN PUESTO NO PERMANENTE)',
-        partida_2: '13-1-2-52-407-3-7-0-1',
-        denominacion_2: '',
-        monto_asignado_2: '5.537.881,00',
-        monto_solicitado_2: '0,00',
-        monto_disponible_2: '5.537.881,00',
-        monto_solicitar_2: '10,00',
-        denominacion_activ_3: 'PATRIA SOCIALISTA (FCI)',
-        partida_3: '13-1-2-53-407-1-3-7-12',
-        denominacion_3: 'REHABILITACIÓN DE LA FACHADA DEL HOSPITAL DR RAFAEL ZAMORA AREVALO, PARROQUIA VALLE DE LA PASCUA ESTADO BOLIVIARIANO DE GUARICO ',
-        monto_asignado_3: '2.176.872,65',
-        monto_solicitado_3: '2.176.827,65',
-        monto_disponible_3: '45,00',
-        monto_solicitar_3: '0',
-        denominacion_activ_4: 'PATRIA SOCIALISTA (PROYECTOS ORDINARIO / PROYECTOS ESTRATEGICOS)',
-        partida_4: '13-1-2-54-407-1-3-7-1',
-        denominacion_4: 'FUNDACIÓN PATRIA SOCIALISTA (PROYECTOS ORDINARIOS / PROYECTOS ESTRATEGICOS)',
-        monto_asignado_4: '21.111.188,33',
-        monto_solicitado_4: '21.111.002,99',
-        monto_disponible_4: '185,34',
-        monto_solicitar_4: '10,00',
-        index: '4',
-        concepto: 'KKKKK',
-        salir: ''
-      }
-
-     */
+    console.log(req.body);
     const { rif, concepto, deno_dependencia, monto_solicitud, id_send } = req.body;
 
     const db = 0;
