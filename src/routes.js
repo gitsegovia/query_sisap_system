@@ -1222,4 +1222,67 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
   }
 });
 
+router.get("/sisap/solicitud_recurso/guardar", async (req, res) => {
+  try {
+    //13-1-2-53-407-1-3-7-12
+    /**
+      ano
+      numero_documento
+      tipo_documento
+      fecha_documento
+      tipo_recurso
+      condicion_juridica
+      concepto
+      beneficiario
+      concepto
+      condicion_documento
+      num_asiento
+      fecha_proceso_registro
+      fecha_proceso_anulacion
+     */
+    //const { rif, beneficiario, concepto, monto_total } = req.body;
+    console.log(req.body);
+
+    res.json({ message: "ok", data: req.body });
+    /*
+    const db = 0;
+
+    const current = new Date();
+    const ano = current.getFullYear();
+    const fecha_documento = current.getFullYear() + "-" + current.getMonth() + "-" + current.getDate();
+    const concepto_cuerpo = "BENEFICIARIO: " + beneficiario + " POR CONCEPTO DE: " + concepto;
+
+    const sqlQuery_numero = `SELECT numero_compromiso FROM cepd01_compromiso_numero WHERE cod_dep=1 AND ano_compromiso=${ano} AND situacion=1 ORDER BY numero_compromiso ASC LIMIT 1`;
+
+    const res_numero = await specificQuery({ sqlQuery: sqlQuery_numero, db });
+
+    if (res_numero.length == 0) {
+      res.status(500).send({ message: "No existe numero de compromiso disponible" });
+      return false;
+    }
+
+    let numero_compromiso = res_numero[0].numero_compromiso;
+
+    await specificQuery({ sqlQuery: `UPDATE cepd01_compromiso_numero SET situacion=2 WHERE cod_dep=1 AND ano_compromiso=${ano} AND numero_compromiso=${numero_compromiso}`, db });
+
+    const camposT2 =
+      "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
+
+    const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${beneficiario}',2,'${fecha_documento}','1900-01-01')`;
+
+    //await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
+
+    /*cepd01_compromiso_numero;
+    cepd01_compromiso_cuerpo;
+    cepd01_compromiso_partidas;
+    cepd01_compromiso_poremitir;* /
+    res.json({
+      numero_compromiso,
+      sqlQuery_i_cuerpo,
+    });*/
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 export default router;
