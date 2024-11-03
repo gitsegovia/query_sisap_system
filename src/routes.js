@@ -1233,10 +1233,10 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const ano = current.getFullYear();
     const fecha_documento = current.getFullYear() + "-" + current.getMonth() + "-" + current.getDate();
     const concepto_cuerpo = "BENEFICIARIO: " + deno_dependencia + " POR CONCEPTO DE: " + concepto;
-    const monto_total = monto_solicitud.replace(".", "").replace(".", ",");
+    const monto_total = monto_solicitud;
 
     const sqlQuery_numero = `SELECT numero_compromiso FROM cepd01_compromiso_numero WHERE cod_dep=1 AND ano_compromiso=${ano} AND situacion=1 ORDER BY numero_compromiso ASC LIMIT 1`;
-
+    /*
     const res_numero = await specificQuery({ sqlQuery: sqlQuery_numero, db });
 
     if (res_numero.length == 0) {
@@ -1247,7 +1247,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     let numero_compromiso = res_numero[0].numero_compromiso;
 
     await specificQuery({ sqlQuery: `UPDATE cepd01_compromiso_numero SET situacion=2 WHERE cod_dep=1 AND ano_compromiso=${ano} AND numero_compromiso=${numero_compromiso}`, db });
-    /*
+    
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
@@ -1338,7 +1338,6 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const sqlQuery_i_insert_cfpd21 = sql_insert_cfpd21;
 */
     res.json({
-      numero_compromiso,
       fecha_documento,
       concepto_cuerpo,
       monto_total,
