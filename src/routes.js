@@ -1346,7 +1346,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
       sqlQuery_i_insert_cfpd21,*/
     });
   } catch (error) {
-    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+    res.status(500).json({ message: "Error en la consulta unificada", error: error });
   }
 });
 
