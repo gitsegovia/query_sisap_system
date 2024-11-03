@@ -1254,7 +1254,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01')`;
 
     //await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
-    /*
+
     const camposT3 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,ano,cod_sector,cod_programa,cod_sub_prog,cod_proyecto,cod_activ_obra,cod_partida,cod_generica,cod_especifica,cod_sub_espec,cod_auxiliar,monto,numero_control_compromiso";
 
@@ -1330,10 +1330,10 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
       //MOTOR PRESUPUESTARIO
       sql_update132 += `UPDATE cfpd05 set compromiso_anual=compromiso_anual+${monto_partida}, ${compromiso_mes}=${compromiso_mes}+${monto_partida} WHERE cod_dep=1 and ano=${ano} and cod_sector=${cod_sector} and cod_programa=${cod_programa} and cod_sub_prog=${cod_sub_prog} and cod_activ_obra=${cod_activ_obra} and cod_partida=${cod_partida} and cod_generica=${cod_generica} and cod_especifica=${cod_especifica} and cod_sub_espec=${cod_sub_espec} and cod_auxiliar=${cod_auxiliar};`;
 
-      const ccp = `REGISTRO DE COMPROMISO AÑO: ${ann}, NUMERO: ${numero_compromiso} DE FECHA: ${fecha_documento}, ${concepto_cuerpo}`;
-      sql_insert_cfpd21 += `INSERT INTO cfpd21 (cod_presi, cod_entidad, cod_tipo_inst, cod_inst, cod_dep, ano, cod_sector, cod_programa, cod_sub_prog, cod_proyecto, cod_activ_obra, cod_partida, cod_generica, cod_especifica, cod_sub_espec, cod_auxiliar, numero_asiento_compromiso, monto, fecha, concepto) VALUES(1,12,30,12,1,${ano},${cod_sector},${cod_programa},${cod_sub_prog},0,${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${numero_compromiso},${monto_partida},'${fecha_documento}','${ccp}');`;
+      /*  const ccp = `REGISTRO DE COMPROMISO AÑO: ${ann}, NUMERO: ${numero_compromiso} DE FECHA: ${fecha_documento}, ${concepto_cuerpo}`;
+      sql_insert_cfpd21 += `INSERT INTO cfpd21 (cod_presi, cod_entidad, cod_tipo_inst, cod_inst, cod_dep, ano, cod_sector, cod_programa, cod_sub_prog, cod_proyecto, cod_activ_obra, cod_partida, cod_generica, cod_especifica, cod_sub_espec, cod_auxiliar, numero_asiento_compromiso, monto, fecha, concepto) VALUES(1,12,30,12,1,${ano},${cod_sector},${cod_programa},${cod_sub_prog},0,${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${numero_compromiso},${monto_partida},'${fecha_documento}','${ccp}');`;*/
     }
-    const sqlQuery_i_partidas = `INSERT INTO cepd01_compromiso_partidas (${camposT3}) VALUES ${values}`;
+    /*   const sqlQuery_i_partidas = `INSERT INTO cepd01_compromiso_partidas (${camposT3}) VALUES ${values}`;
     const sqlQuery_i_update_cfpd05 = sql_update132;
     const sqlQuery_i_insert_cfpd21 = sql_insert_cfpd21;
 */
