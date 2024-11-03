@@ -1247,14 +1247,14 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     let numero_compromiso = res_numero[0].numero_compromiso;
 
     await specificQuery({ sqlQuery: `UPDATE cepd01_compromiso_numero SET situacion=2 WHERE cod_dep=1 AND ano_compromiso=${ano} AND numero_compromiso=${numero_compromiso}`, db });
-    /*
+
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
     const sqlQuery_i_cuerpo = `BEGIN SISAP_COMPROMISO; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01')`;
 
     //await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
-
+    /*
     const camposT3 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,ano,cod_sector,cod_programa,cod_sub_prog,cod_proyecto,cod_activ_obra,cod_partida,cod_generica,cod_especifica,cod_sub_espec,cod_auxiliar,monto,numero_control_compromiso";
 
@@ -1339,9 +1339,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
 */
     res.json({
       fecha_documento,
-      concepto_cuerpo,
-      monto_total,
-      rif,
+      sqlQuery_i_cuerpo,
       /*sqlQuery_i_cuerpo,
       sqlQuery_i_partidas,
       sqlQuery_i_update_cfpd05,
