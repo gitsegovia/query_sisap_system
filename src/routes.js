@@ -1354,4 +1354,19 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
   }
 });
 
+router.get("/sisap/solicitud_recurso/consultar_compromiso/:ano/:numero_compromiso", async (req, res) => {
+  const { ano, numero_compromiso } = req.params;
+  const db = 0;
+
+  try {
+    const sql = `SELECT numero_orden_pago FROM cepd01_compromiso_cuerpo WHERE ano_documento=${ano} AND numero_documento=${numero_compromiso}`;
+    const query = await specificQuery({ sqlQuery: sql, db });
+    res.json({
+      query,
+    });
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 export default router;
