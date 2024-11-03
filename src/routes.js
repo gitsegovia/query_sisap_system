@@ -1247,7 +1247,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     let numero_compromiso = res_numero[0].numero_compromiso;
 
     await specificQuery({ sqlQuery: `UPDATE cepd01_compromiso_numero SET situacion=2 WHERE cod_dep=1 AND ano_compromiso=${ano} AND numero_compromiso=${numero_compromiso}`, db });
-
+    /*
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
@@ -1336,13 +1336,17 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const sqlQuery_i_partidas = `INSERT INTO cepd01_compromiso_partidas (${camposT3}) VALUES ${values}`;
     const sqlQuery_i_update_cfpd05 = sql_update132;
     const sqlQuery_i_insert_cfpd21 = sql_insert_cfpd21;
-
+*/
     res.json({
       numero_compromiso,
-      sqlQuery_i_cuerpo,
+      fecha_documento,
+      concepto_cuerpo,
+      monto_total,
+      rif,
+      /*sqlQuery_i_cuerpo,
       sqlQuery_i_partidas,
       sqlQuery_i_update_cfpd05,
-      sqlQuery_i_insert_cfpd21,
+      sqlQuery_i_insert_cfpd21,*/
     });
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
