@@ -1223,7 +1223,7 @@ router.get("/sisap/solicitud_recurso/partidas/:ano/:cod_sector/:cod_programa/:co
 });
 
 router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res) => {
-  const db = 0;
+  const db = 1;
   try {
     const { rif, concepto, deno_dependencia, monto_solicitud, id_send } = req.body;
     const current = new Date();
@@ -1248,7 +1248,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
     const camposT2 =
       "cod_presi,cod_entidad,cod_tipo_inst,cod_inst,cod_dep,ano_documento,numero_documento,cod_tipo_compromiso,fecha_documento,tipo_recurso,rif,cedula_identidad,cod_dir_superior,cod_coordinacion,cod_secretaria,cod_direccion,concepto,monto,condicion_actividad,dia_asiento_registro,mes_asiento_registro,ano_asiento_registro, numero_asiento_registro,username_registro,ano_anulacion,numero_anulacion,dia_asiento_anulacion,mes_asiento_anulacion,ano_asiento_anulacion,numero_asiento_anulacion,username_anulacion,ano_orden_pago,numero_orden_pago,beneficiario,condicion_juridica,fecha_proceso_registro,fecha_proceso_anulacion";
 
-    const sqlQuery_i_cuerpo = `BEGIN; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},114,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01');`;
+    const sqlQuery_i_cuerpo = `BEGIN; INSERT INTO cepd01_compromiso_cuerpo (${camposT2}) VALUES (1,12,30,12,1,${ano},${numero_compromiso},15,'${fecha_documento}',1,'${rif}','0',1,1,1,1,'${concepto_cuerpo}',${monto_total},1,0,0,0,0,'AUTOADMIN',0,0,'0',0,0,0,0,0,0,'${deno_dependencia}',2,'${fecha_documento}','1900-01-01');`;
 
     await specificQuery({ sqlQuery: sqlQuery_i_cuerpo, db });
 
@@ -1325,7 +1325,13 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
       sql_update132 += `UPDATE cfpd05 set compromiso_anual=compromiso_anual+${monto_partida}, ${compromiso_mes}=${compromiso_mes}+${monto_partida} WHERE cod_dep=1 and ano=${ano} and cod_sector=${cod_sector} and cod_programa=${cod_programa} and cod_sub_prog=${cod_sub_prog} and cod_activ_obra=${cod_activ_obra} and cod_partida=${cod_partida} and cod_generica=${cod_generica} and cod_especifica=${cod_especifica} and cod_sub_espec=${cod_sub_espec} and cod_auxiliar=${cod_auxiliar};`;
 
       const ccp = `REGISTRO DE COMPROMISO AÑO: ${ano}, NUMERO: ${numero_compromiso} DE FECHA: ${fecha_documento}, ${concepto_cuerpo}`;
-      sql_insert_cfpd21 += `INSERT INTO cfpd21 (cod_presi, cod_entidad, cod_tipo_inst, cod_inst, cod_dep, ano, cod_sector, cod_programa, cod_sub_prog, cod_proyecto, cod_activ_obra, cod_partida, cod_generica, cod_especifica, cod_sub_espec, cod_auxiliar, numero_asiento_compromiso, monto, fecha, concepto) VALUES(1,12,30,12,1,${ano},${cod_sector},${cod_programa},${cod_sub_prog},0,${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${numero_compromiso},${monto_partida},'${fecha_documento}','${ccp}');`;
+
+      const sql = `SELECT cfpd21_compromiso(1, 12, 30, 12, ${ano}) as numero_compromiso;`;
+      const query = await specificQuery({ sqlQuery: sql, db });
+
+      const numero_asiento_compromiso = query[0].numero_compromiso;
+
+      sql_insert_cfpd21 += `INSERT INTO cfpd21 (cod_presi, cod_entidad, cod_tipo_inst, cod_inst, cod_dep, ano, cod_sector, cod_programa, cod_sub_prog, cod_proyecto, cod_activ_obra, cod_partida, cod_generica, cod_especifica, cod_sub_espec, cod_auxiliar, numero_asiento_compromiso, monto, fecha, concepto) VALUES(1,12,30,12,1,${ano},${cod_sector},${cod_programa},${cod_sub_prog},0,${cod_activ_obra},${cod_partida},${cod_generica},${cod_especifica},${cod_sub_espec},${cod_auxiliar},${numero_asiento_compromiso},${monto_partida},'${fecha_documento}','${ccp}');`;
     }
 
     const camposT3 =
@@ -1356,7 +1362,7 @@ router.post("/sisap/solicitud_recurso/guardar", express.json(), async (req, res)
 
 router.get("/sisap/solicitud_recurso/consultar_compromiso/:ano/:numero_compromiso", async (req, res) => {
   const { ano, numero_compromiso } = req.params;
-  const db = 0;
+  const db = 1;
 
   try {
     const sql = `SELECT numero_orden_pago FROM cepd01_compromiso_cuerpo WHERE ano_documento=${ano} AND numero_documento=${numero_compromiso}`;
@@ -1367,6 +1373,18 @@ router.get("/sisap/solicitud_recurso/consultar_compromiso/:ano/:numero_compromis
   } catch (error) {
     res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
   }
+});
+
+router.get("/sisap/temp", async (req, res) => {
+  const ano = 2024;
+  const db = 0;
+  const sql = `SELECT cfpd21_compromiso(1, 12, 30, 12, ${ano}) as numero_compromiso;`;
+  const query = await specificQuery({ sqlQuery: sql, db });
+  console.log(query);
+
+  res.json({
+    query,
+  });
 });
 
 export default router;
