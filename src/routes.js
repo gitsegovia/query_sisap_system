@@ -598,7 +598,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     if (cod_dep == 1040) {
       return IS_ONLY_LN
         ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+        : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
     }
     if (cod_dep == 1041) {
       return IS_ONLY_LN
