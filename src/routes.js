@@ -1093,6 +1093,160 @@ router.get("/sisap/lista_dep/", async (req, res) => {
   }
 });
 
+router.get("/sisap/cargos_vacantes/:cod_dep", async (req, res) => {
+  const { cod_dep } = req.params;
+
+  if (!cod_dep) {
+    res.status(400).send("Dependencia requerida");
+    return false;
+  }
+
+  const getCondition = () => {
+    if (cod_dep.includes("-")) {
+      const codSplit = cod_dep.split("-");
+      if (codSplit.length < 2) return null;
+      const codSec = parseInt(codSplit[0], 10);
+      const codDir = parseInt(codSplit[1], 10);
+      if (codDir !== 0) {
+        return `cod_dep=1 and cod_secretaria=${codSec} and cod_direccion=${codDir}`;
+      }
+      return `cod_dep=1 and cod_secretaria=${codSec}`;
+    }
+    if (cod_dep < 1000) return null;
+    return `cod_dep=${cod_dep}`;
+  };
+
+  const getDB = () => {
+    if (cod_dep.includes("-")) return 1;
+    if (cod_dep < 1000) return 1;
+    if (DEP_ENTE.includes(Number(cod_dep))) return 2;
+    if (cod_dep == 1035) return 3;
+    if (cod_dep == 1041) return 4;
+    return 1;
+  };
+
+  const condition = getCondition();
+  if (condition === null) {
+    res.status(404).send({ message: "No existe resultados", error: "" });
+    return false;
+  }
+
+  try {
+    const db = getDB();
+    const sqlQuery = `SELECT cod_dep, cod_tipo_nomina, tipo_nomina, cod_cargo, cod_puesto, denominación_clase as cargo, secretaria, direccion, sueldo_basico, compensaciones, primas, bonos FROM v_cnmd05_cargos WHERE condicion_actividad=1 and ${condition}`;
+    const query = await specificQuery({ sqlQuery, db });
+    if (query.length > 0) {
+      res.json(query);
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta", error: error.message });
+  }
+})
+
+router.get("/sisap/empleado", async (req, res) => {
+  const { cedula, cod_dep } = req.query;
+
+  const getConditionAndDB = () => {
+    let depCondition = "f.cod_dep=1";
+    let db = 1;
+
+    if (cod_dep) {
+      if (cod_dep.includes("-")) {
+        const codSplit = cod_dep.split("-");
+        if (codSplit.length >= 2) {
+          const codSec = parseInt(codSplit[0], 10);
+          const codDir = parseInt(codSplit[1], 10);
+          depCondition =
+            codDir !== 0
+              ? `f.cod_dep=1 and f.cod_secretaria=${codSec} and f.cod_direccion=${codDir}`
+              : `f.cod_dep=1 and f.cod_secretaria=${codSec}`;
+        }
+        db = 1;
+      } else {
+        depCondition = `f.cod_dep=${cod_dep}`;
+        if (DEP_ENTE.includes(Number(cod_dep))) db = 2;
+        else if (cod_dep == 1035) db = 3;
+        else if (cod_dep == 1041) db = 4;
+        else db = 1;
+      }
+    }
+
+    const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
+    return { depCondition, db, cedulaCondition };
+  };
+
+  const { depCondition, db, cedulaCondition } = getConditionAndDB();
+
+  try {
+    const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
+       dp.primer_nombre, dp.segundo_nombre, ct.denominacion_clase as cargo, ct.puesto_grado as grado, ar.denominacion as dependencia, ct.secretaria, ct.direccion,
+       ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
+       dp.direccion_habitacion, dp.telefonos_habitacion,
+       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad) cantidad_hijos,
+       CASE
+          WHEN (SELECT count(cedula)
+                FROM cnmd06_datos_familiares df
+                WHERE df.cod_parentesco IN (5,6)
+                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='F'
+          THEN '1'
+          ELSE '0'
+       END AS es_madre,
+       CASE f.condicion_actividad
+            WHEN 1 THEN 'Activo'
+            WHEN 2 THEN 'Permiso no remunerado'
+            WHEN 3 THEN 'Comisión de servicio'
+            WHEN 4 THEN 'Vacaciones'
+            WHEN 5 THEN 'Suspendido'
+            WHEN 6 THEN 'Retirado'
+            WHEN 7 THEN 'Ascenso'
+            WHEN 8 THEN 'Reposo'
+            ELSE 'Desconocido'
+       END AS estatus_actividad,
+       CASE ct.clasificacion_personal
+            WHEN 2 THEN '1'
+            WHEN 15 THEN '1'
+            WHEN 8 THEN '1'
+            WHEN 10 THEN '1'
+            ELSE '0'
+       END AS obreros,
+       CASE ct.clasificacion_personal
+            WHEN 5 THEN '1'
+            WHEN 16 THEN '1'
+            ELSE '0'
+       END AS contratados,
+       CASE
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado <> 99 THEN '1'
+            ELSE '0'
+       END AS empleados,
+       CASE
+            WHEN ct.clasificacion_personal IN (17, 18) THEN '1'
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado = 99 THEN '1'
+            ELSE '0'
+       END AS personal_ln,
+       CASE ct.clasificacion_personal
+            WHEN 12 THEN '1'
+            ELSE '0'
+       END AS comision_servicio
+  FROM cnmd06_fichas f
+  INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
+  INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
+  INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
+  WHERE ${depCondition} AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}
+  ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
+
+    const query = await specificQuery({ sqlQuery, db });
+    if (query.length > 0) {
+      res.json(query);
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta", error: error.message });
+  }
+});
+
 router.get("/fichas/consulta/:cedula", async (req, res) => {
   const { cedula } = req.params;
 
