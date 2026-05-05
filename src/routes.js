@@ -347,8 +347,8 @@ router.get("/hoja_vida/consulta_foto/:cedula", async (req, res) => {
     const CURRENT_YEAR = new Date().getFullYear();
 
     const where = IS_ONLY_LN
-      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`
-      : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 [condition_ext]`;
+      ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} [condition_ext]`
+      : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} [condition_ext]`;
     // const where = IS_ONLY_LN
     //   ? `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14) [condition_ext]`
     //   : `f.cedula_identidad=${cedula} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (1,17,18) [condition_ext]`;
