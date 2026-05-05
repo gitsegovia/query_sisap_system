@@ -1184,7 +1184,7 @@ router.get("/sisap/empleado", async (req, res) => {
        dp.primer_nombre, dp.segundo_nombre, ct.denominacion_clase as cargo, ct.puesto_grado as grado, ar.denominacion as dependencia, ct.secretaria, ct.direccion,
        ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
        dp.direccion_habitacion, dp.telefonos_habitacion,
-       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad) cantidad_hijos,
+       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
        CASE
           WHEN (SELECT count(cedula)
                 FROM cnmd06_datos_familiares df
