@@ -1133,7 +1133,7 @@ router.get("/sisap/cargos_vacantes/:cod_dep", async (req, res) => {
 
   try {
     const db = getDB();
-    const sqlQuery = `SELECT cod_dep, cod_tipo_nomina, tipo_nomina, cod_cargo, cod_puesto, denominación_clase as cargo, secretaria, direccion, sueldo_basico, compensaciones, primas, bonos FROM v_cnmd05_cargos WHERE condicion_actividad=1 and ${condition}`;
+    const sqlQuery = `SELECT cod_dep, cod_tipo_nomina, tipo_nomina, cod_cargo, cod_puesto, denominacion_clase as cargo, secretaria, direccion, sueldo_basico, compensaciones, primas, bonos FROM v_cnmd05_cargos WHERE condicion_actividad=1 and ${condition}`;
     const query = await specificQuery({ sqlQuery, db });
     if (query.length > 0) {
       res.json(query);
