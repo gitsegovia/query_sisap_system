@@ -1190,8 +1190,8 @@ router.get("/sisap/empleado", async (req, res) => {
                 FROM cnmd06_datos_familiares df
                 WHERE df.cod_parentesco IN (5,6)
                   AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='F'
-          THEN '1'
-          ELSE '0'
+          THEN true
+          ELSE false
        END AS es_madre,
        CASE f.condicion_actividad
             WHEN 1 THEN 'Activo'
@@ -1205,29 +1205,29 @@ router.get("/sisap/empleado", async (req, res) => {
             ELSE 'Desconocido'
        END AS estatus_actividad,
        CASE ct.clasificacion_personal
-            WHEN 2 THEN '1'
-            WHEN 15 THEN '1'
-            WHEN 8 THEN '1'
-            WHEN 10 THEN '1'
-            ELSE '0'
+            WHEN 2 THEN true
+            WHEN 15 THEN true
+            WHEN 8 THEN true
+            WHEN 10 THEN true
+            ELSE false
        END AS obreros,
        CASE ct.clasificacion_personal
-            WHEN 5 THEN '1'
-            WHEN 16 THEN '1'
-            ELSE '0'
+            WHEN 5 THEN true
+            WHEN 16 THEN true
+            ELSE false
        END AS contratados,
        CASE
-            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado <> 99 THEN '1'
-            ELSE '0'
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado <> 99 THEN true
+            ELSE false
        END AS empleados,
        CASE
-            WHEN ct.clasificacion_personal IN (17, 18) THEN '1'
-            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado = 99 THEN '1'
-            ELSE '0'
+            WHEN ct.clasificacion_personal IN (17, 18) THEN true
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado = 99 THEN true
+            ELSE false
        END AS personal_ln,
        CASE ct.clasificacion_personal
-            WHEN 12 THEN '1'
-            ELSE '0'
+            WHEN 12 THEN true
+            ELSE false
        END AS comision_servicio
   FROM cnmd06_fichas f
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
