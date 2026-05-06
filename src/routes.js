@@ -1160,8 +1160,8 @@ router.get("/sisap/empleado", async (req, res) => {
           const codDir = parseInt(codSplit[1], 10);
           depCondition =
             codDir !== 0
-              ? `f.cod_dep=1 and f.cod_secretaria=${codSec} and f.cod_direccion=${codDir}`
-              : `f.cod_dep=1 and f.cod_secretaria=${codSec}`;
+              ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and f.cod_direccion=${codDir}`
+              : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
         }
         db = 1;
       } else {
@@ -1181,7 +1181,7 @@ router.get("/sisap/empleado", async (req, res) => {
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
-       dp.primer_nombre, dp.segundo_nombre, ct.denominacion_clase as cargo, ct.puesto_grado as grado, ar.denominacion as dependencia, ct.secretaria, ct.direccion,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado, ar.denominacion as dependencia, ct.secretaria, ct.direccion,
        ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
        dp.direccion_habitacion, dp.telefonos_habitacion,
        (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
