@@ -1160,7 +1160,7 @@ router.get("/sisap/empleado", async (req, res) => {
           const codDir = parseInt(codSplit[1], 10);
           depCondition =
             codDir !== 0
-              ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and f.cod_direccion=${codDir}`
+              ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
               : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
         }
         db = 1;
