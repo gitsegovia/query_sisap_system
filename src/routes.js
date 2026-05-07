@@ -1149,35 +1149,38 @@ router.get("/sisap/empleado", async (req, res) => {
   const { cedula, cod_dep } = req.query;
 
   const getConditionAndDB = () => {
-    let depCondition = "f.cod_dep=1";
-    let db = 1;
+    const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
 
-    if (cod_dep) {
-      if (cod_dep.includes("-")) {
-        const codSplit = cod_dep.split("-");
-        if (codSplit.length >= 2) {
-          const codSec = parseInt(codSplit[0], 10);
-          const codDir = parseInt(codSplit[1], 10);
-          depCondition =
-            codDir !== 0
-              ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
-              : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
-        }
-        db = 1;
-      } else {
-        depCondition = `f.cod_dep=${cod_dep}`;
-        if (DEP_ENTE.includes(Number(cod_dep))) db = 2;
-        else if (cod_dep == 1035) db = 3;
-        else if (cod_dep == 1041) db = 4;
-        else db = 1;
-      }
+    if (!cod_dep) {
+      return { depCondition: "", db: null, cedulaCondition, useUnified: true };
     }
 
-    const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
-    return { depCondition, db, cedulaCondition };
+    let depCondition = "";
+    let db = 1;
+
+    if (cod_dep.includes("-")) {
+      const codSplit = cod_dep.split("-");
+      if (codSplit.length >= 2) {
+        const codSec = parseInt(codSplit[0], 10);
+        const codDir = parseInt(codSplit[1], 10);
+        depCondition =
+          codDir !== 0
+            ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
+            : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+      }
+      db = 1;
+    } else {
+      depCondition = `f.cod_dep=${cod_dep}`;
+      if (DEP_ENTE.includes(Number(cod_dep))) db = 2;
+      else if (cod_dep == 1035) db = 3;
+      else if (cod_dep == 1041) db = 4;
+      else db = 1;
+    }
+
+    return { depCondition, db, cedulaCondition, useUnified: false };
   };
 
-  const { depCondition, db, cedulaCondition } = getConditionAndDB();
+  const { depCondition, db, cedulaCondition, useUnified } = getConditionAndDB();
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
@@ -1248,10 +1251,12 @@ router.get("/sisap/empleado", async (req, res) => {
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE ${depCondition} AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}
+  WHERE ${depCondition ? depCondition + " AND " : ""}f.condicion_actividad in (1,3,4,8)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
-    const query = await specificQuery({ sqlQuery, db });
+    const query = useUnified
+      ? await unifiedQuery({ sqlQuery, table: "f." })
+      : await specificQuery({ sqlQuery, db });
     if (query.length > 0) {
       res.json(query);
     } else {
