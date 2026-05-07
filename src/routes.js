@@ -1181,7 +1181,22 @@ router.get("/sisap/empleado", async (req, res) => {
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
-       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado, ar.denominacion as dependencia, ct.secretaria, ct.direccion,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado,
+       CASE
+         WHEN f.cod_dep = 1 THEN COALESCE(
+           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=f.cod_secretaria AND d.cod_direccion=f.cod_direccion LIMIT 1),
+           ct.secretaria
+         )
+         ELSE ar.denominacion
+       END AS dependencia,
+       CASE
+         WHEN f.cod_dep = 1 THEN
+           CASE WHEN f.cod_secretaria::int < 10 THEN '0' || f.cod_secretaria::text || '-' || f.cod_direccion::text
+                ELSE f.cod_secretaria::text || '-' || f.cod_direccion::text
+           END
+         ELSE f.cod_dep::text
+       END AS cod_dep_formato,
+       ct.secretaria, ct.direccion,
        ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
        dp.direccion_habitacion, dp.telefonos_habitacion,
        (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
