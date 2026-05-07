@@ -1191,8 +1191,8 @@ router.get("/sisap/empleado", async (req, res) => {
        END AS dependencia,
        CASE
          WHEN f.cod_dep = 1 THEN
-           CASE WHEN f.cod_secretaria::int < 10 THEN '0' || f.cod_secretaria::text || '-' || f.cod_direccion::text
-                ELSE f.cod_secretaria::text || '-' || f.cod_direccion::text
+           CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+                ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
            END
          ELSE f.cod_dep::text
        END AS cod_dep_formato,
