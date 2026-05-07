@@ -1152,7 +1152,8 @@ router.get("/sisap/empleado", async (req, res) => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
 
     if (!cod_dep) {
-      return { depCondition: "", db: null, cedulaCondition, useUnified: true };
+      const allDeps = `(f.cod_dep=1) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
+      return { depCondition: allDeps, db: null, cedulaCondition, useUnified: true };
     }
 
     let depCondition = "";
@@ -1251,23 +1252,14 @@ router.get("/sisap/empleado", async (req, res) => {
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE ##DEP_FILTER## AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
-
-    const buildSql = (depFilter) => sqlQuery.replace("##DEP_FILTER##", depFilter);
 
     let query;
     if (useUnified) {
-      const depEnteList = DEP_ENTE.join(",");
-      const [q1, q2, q3, q4] = await Promise.all([
-        specificQuery({ sqlQuery: buildSql(`f.cod_dep NOT IN (${depEnteList},1035,1041)`), db: 1 }),
-        specificQuery({ sqlQuery: buildSql(`f.cod_dep IN (${depEnteList})`), db: 2 }),
-        specificQuery({ sqlQuery: buildSql(`f.cod_dep=1035`), db: 3 }),
-        specificQuery({ sqlQuery: buildSql(`f.cod_dep=1041`), db: 4 }),
-      ]);
-      query = [...q1, ...q2, ...q3, ...q4];
+      query = await unifiedQuery({ sqlQuery, table: "f." });
     } else {
-      query = await specificQuery({ sqlQuery: buildSql(depCondition), db });
+      query = await specificQuery({ sqlQuery, db });
     }
     if (query.length > 0) {
       res.json(query);
