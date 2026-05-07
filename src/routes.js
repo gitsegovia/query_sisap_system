@@ -1251,12 +1251,24 @@ router.get("/sisap/empleado", async (req, res) => {
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE ${depCondition ? depCondition + " AND " : ""}f.condicion_actividad in (1,3,4,8)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
+  WHERE ##DEP_FILTER## AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
-    const query = useUnified
-      ? await unifiedQuery({ sqlQuery, table: "f." })
-      : await specificQuery({ sqlQuery, db });
+    const buildSql = (depFilter) => sqlQuery.replace("##DEP_FILTER##", depFilter);
+
+    let query;
+    if (useUnified) {
+      const depEnteList = DEP_ENTE.join(",");
+      const [q1, q2, q3, q4] = await Promise.all([
+        specificQuery({ sqlQuery: buildSql(`f.cod_dep NOT IN (${depEnteList},1035,1041)`), db: 1 }),
+        specificQuery({ sqlQuery: buildSql(`f.cod_dep IN (${depEnteList})`), db: 2 }),
+        specificQuery({ sqlQuery: buildSql(`f.cod_dep=1035`), db: 3 }),
+        specificQuery({ sqlQuery: buildSql(`f.cod_dep=1041`), db: 4 }),
+      ]);
+      query = [...q1, ...q2, ...q3, ...q4];
+    } else {
+      query = await specificQuery({ sqlQuery: buildSql(depCondition), db });
+    }
     if (query.length > 0) {
       res.json(query);
     } else {
