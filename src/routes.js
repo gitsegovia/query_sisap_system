@@ -1184,7 +1184,7 @@ router.get("/sisap/empleado", async (req, res) => {
        dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado,
        CASE
          WHEN f.cod_dep = 1 THEN COALESCE(
-           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=f.cod_secretaria AND d.cod_direccion=f.cod_direccion LIMIT 1),
+           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
            ct.secretaria
          )
          ELSE ar.denominacion
