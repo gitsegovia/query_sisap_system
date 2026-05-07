@@ -1151,8 +1151,10 @@ router.get("/sisap/empleado", async (req, res) => {
   const getConditionAndDB = () => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
 
+    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
+
     if (!cod_dep) {
-      const allDeps = `(f.cod_dep=1) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
+      const allDeps = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
       return { depCondition: allDeps, db: null, cedulaCondition, useUnified: true };
     }
 
@@ -1164,10 +1166,10 @@ router.get("/sisap/empleado", async (req, res) => {
       if (codSplit.length >= 2) {
         const codSec = parseInt(codSplit[0], 10);
         const codDir = parseInt(codSplit[1], 10);
-        depCondition =
-          codDir !== 0
-            ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
-            : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+        const base = codDir !== 0
+          ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
+          : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+        depCondition = `${base} and ${nominaExcluidos}`;
       }
       db = 1;
     } else {
@@ -1252,7 +1254,7 @@ router.get("/sisap/empleado", async (req, res) => {
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND ct.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
     let query;
