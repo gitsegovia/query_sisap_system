@@ -1187,7 +1187,7 @@ router.get("/sisap/empleado", async (req, res) => {
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
-       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso, f.fecha_nacimiento,
        CASE
          WHEN f.cod_dep = 1 THEN COALESCE(
            (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
@@ -1320,7 +1320,7 @@ router.get("/fichas/consulta/:cedula", async (req, res) => {
 router.get("/fichas/consulta_expediente/:cedula/:cod_dep", async (req, res) => {
   const { cedula, cod_dep } = req.params;
 
-  if (!cedula) {
+  if (!cedula) {tig
     res.status(404).send("Cedula requerida");
     return false;
   }
