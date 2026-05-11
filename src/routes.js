@@ -1187,7 +1187,7 @@ router.get("/sisap/empleado", async (req, res) => {
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
-       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso, f.fecha_nacimiento,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso,
        CASE
          WHEN f.cod_dep = 1 THEN COALESCE(
            (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
