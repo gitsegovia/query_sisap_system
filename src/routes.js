@@ -1197,8 +1197,19 @@ router.get("/sisap/empleado", async (req, res) => {
        END AS dependencia,
        CASE
          WHEN f.cod_dep = 1 THEN
-           CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
-                ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+           CASE
+             WHEN (ct.cod_secretaria = 1  AND ct.cod_direccion IN (3,5))
+               OR (ct.cod_secretaria = 10 AND ct.cod_direccion IN (8,9))
+               OR (ct.cod_secretaria = 13 AND ct.cod_direccion IN (2,3,4,5,8))
+               OR (ct.cod_secretaria = 15 AND ct.cod_direccion IN (1,2,4,8,9))
+             THEN
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+                    ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+               END
+             ELSE
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-00'
+                    ELSE ct.cod_secretaria::text || '-00'
+               END
            END
          ELSE f.cod_dep::text
        END AS cod_dep_formato,
@@ -1214,6 +1225,14 @@ router.get("/sisap/empleado", async (req, res) => {
           THEN true
           ELSE false
        END AS es_madre,
+       CASE
+          WHEN (SELECT count(cedula)
+                FROM cnmd06_datos_familiares df
+                WHERE df.cod_parentesco IN (5,6)
+                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='M'
+          THEN true
+          ELSE false
+       END AS es_padre,
        CASE f.condicion_actividad
             WHEN 1 THEN 'Activo'
             WHEN 2 THEN 'Permiso no remunerado'
