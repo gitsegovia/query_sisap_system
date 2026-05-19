@@ -1214,9 +1214,11 @@ router.get("/sisap/empleado", async (req, res) => {
          ELSE f.cod_dep::text
        END AS cod_dep_formato,
        ct.secretaria, ct.direccion,
+       ct.cod_estado as cod_estado, ct.cod_municipio as cod_municipio, ct.cod_parroquia as cod_parroquia, ct.cod_centro as cod_centro_poblado,
        ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
        dp.direccion_habitacion, dp.telefonos_habitacion,
        (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
+       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad and DATE_PART('year', AGE(df.fecha_nacimiento)) <= 12)::int cantidad_hijos_menores,
        CASE
           WHEN (SELECT count(cedula)
                 FROM cnmd06_datos_familiares df
