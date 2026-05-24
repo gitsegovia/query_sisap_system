@@ -1146,7 +1146,7 @@ router.get("/sisap/cargos_vacantes/:cod_dep", async (req, res) => {
 })
 
 router.get("/sisap/empleado", async (req, res) => {
-  const { cedula, cod_dep } = req.query;
+  const { cedula, cod_dep, tipo } = req.query;
 
   const getConditionAndDB = () => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
@@ -1184,6 +1184,10 @@ router.get("/sisap/empleado", async (req, res) => {
   };
 
   const { depCondition, db, cedulaCondition, useUnified } = getConditionAndDB();
+
+  const clasificacionCondition = (tipo === "pensionados" || cedula)
+    ? `ct.clasificacion_personal not in (9,10,11,12,13,14,15)`
+    : `ct.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
@@ -1270,12 +1274,16 @@ router.get("/sisap/empleado", async (req, res) => {
        CASE ct.clasificacion_personal
             WHEN 12 THEN true
             ELSE false
-       END AS comision_servicio
+       END AS comision_servicio,
+       CASE
+            WHEN ct.clasificacion_personal IN (3,4,7,8) THEN true
+            ELSE false
+       END AS pensionado
   FROM cnmd06_fichas f
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND ct.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND ${clasificacionCondition}${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
     let query;
