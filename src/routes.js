@@ -1187,7 +1187,7 @@ router.get("/sisap/empleado", async (req, res) => {
 
   const clasificacionCondition = (tipo === "pensionados" || cedula)
     ? `ct.clasificacion_personal not in (3,4,6,11,12,13,14,15)`
-    : `ct.clasificacion_personal not in (3,4,6,7,8,,9,10,11,12,13,14,15)`;
+    : `ct.clasificacion_personal not in (3,4,6,7,8,9,10,11,12,13,14,15)`;
 
   try {
     const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
