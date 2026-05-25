@@ -1276,7 +1276,7 @@ router.get("/sisap/empleado", async (req, res) => {
             ELSE false
        END AS comision_servicio,
        CASE
-            WHEN ct.clasificacion_personal IN (3,4,7,8) THEN true
+            WHEN ct.clasificacion_personal IN (7,8,9,10) THEN true
             ELSE false
        END AS pensionado
   FROM cnmd06_fichas f
