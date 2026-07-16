@@ -1283,7 +1283,8 @@ router.get("/sisap/empleado", async (req, res) => {
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
   INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
-  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND ${clasificacionCondition}${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
+  INNER JOIN cnmd01 as hn on hn.cod_dep=f.cod_dep and hn.cod_tipo_nomina=f.cod_tipo_nomina
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND hn.denominacion_devengado<>'PRESTACIONES' ${clasificacionCondition}${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
   ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
     let query;
