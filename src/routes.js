@@ -1304,7 +1304,7 @@ router.get("/sisap/empleado", async (req, res) => {
 });
 
 router.get("/sisap/empleado/hijos_menores", async (req, res) => {
-  const { cedula, cod_dep, tipo } = req.query;
+  const { cedula, cod_dep, tipo, formato } = req.query;
 
   const getConditionAndDB = () => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
@@ -1418,7 +1418,25 @@ router.get("/sisap/empleado/hijos_menores", async (req, res) => {
       query = await specificQuery({ sqlQuery, db });
     }
     if (query.length > 0) {
-      res.json(query);
+      if (formato === "csv") {
+        const headers = Object.keys(query[0]);
+        const escapeCsv = (value) => {
+          if (value === null || value === undefined) return "";
+          if (value instanceof Date) return value.toISOString().slice(0, 10);
+          return `"${String(value).replace(/"/g, '""')}"`;
+        };
+        const lines = [headers.join(";")];
+        query.forEach((row) => {
+          lines.push(headers.map((h) => escapeCsv(row[h])).join(";"));
+        });
+        // BOM para que Excel reconozca UTF-8 (acentos, ñ)
+        const csv = "\uFEFF" + lines.join("\r\n");
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", 'attachment; filename="empleados_hijos_menores.csv"');
+        res.send(csv);
+      } else {
+        res.json(query);
+      }
     } else {
       res.status(404).send({ message: "No existe resultados", error: "" });
     }
