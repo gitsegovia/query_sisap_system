@@ -1303,6 +1303,130 @@ router.get("/sisap/empleado", async (req, res) => {
   }
 });
 
+router.get("/sisap/empleado/hijos_menores", async (req, res) => {
+  const { cedula, cod_dep, tipo } = req.query;
+
+  const getConditionAndDB = () => {
+    const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
+
+    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
+
+    if (!cod_dep) {
+      const allDeps = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
+      return { depCondition: allDeps, db: null, cedulaCondition, useUnified: true };
+    }
+
+    let depCondition = "";
+    let db = 1;
+
+    if (cod_dep.includes("-")) {
+      const codSplit = cod_dep.split("-");
+      if (codSplit.length >= 2) {
+        const codSec = parseInt(codSplit[0], 10);
+        const codDir = parseInt(codSplit[1], 10);
+        const base = codDir !== 0
+          ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
+          : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+        depCondition = `${base} and ${nominaExcluidos}`;
+      }
+      db = 1;
+    } else {
+      depCondition = `f.cod_dep=${cod_dep}`;
+      if (DEP_ENTE.includes(Number(cod_dep))) db = 2;
+      else if (cod_dep == 1035) db = 3;
+      else if (cod_dep == 1041) db = 4;
+      else db = 1;
+    }
+
+    return { depCondition, db, cedulaCondition, useUnified: false };
+  };
+
+  const { depCondition, db, cedulaCondition, useUnified } = getConditionAndDB();
+
+  const clasificacionCondition = (tipo === "pensionados" || cedula)
+    ? `ct.clasificacion_personal not in (3,4,6,11,12,13,14,15)`
+    : `ct.clasificacion_personal not in (3,4,6,7,8,9,10,11,12,13,14,15)`;
+
+  try {
+    const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, dp.fecha_nacimiento, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso, f.cod_ficha, f.cod_tipo_nomina, f.cod_cargo,
+       CASE
+         WHEN f.cod_dep = 1 THEN COALESCE(
+           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
+           ct.secretaria
+         )
+         ELSE ar.denominacion
+       END AS dependencia,
+       CASE
+         WHEN f.cod_dep = 1 THEN
+           CASE
+             WHEN (ct.cod_secretaria = 1  AND ct.cod_direccion IN (3,5))
+               OR (ct.cod_secretaria = 10 AND ct.cod_direccion IN (8,9))
+               OR (ct.cod_secretaria = 13 AND ct.cod_direccion IN (2,3,4,5,8))
+               OR (ct.cod_secretaria = 15 AND ct.cod_direccion IN (1,2,4,8,9))
+             THEN
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+                    ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+               END
+             ELSE
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-00'
+                    ELSE ct.cod_secretaria::text || '-00'
+               END
+           END
+         ELSE f.cod_dep::text
+       END AS cod_dep_formato,
+       ct.secretaria, ct.direccion,
+       dp.direccion_habitacion, dp.telefonos_habitacion,
+       (select count(cedula) FROM cnmd06_datos_familiares df2 where df2.cod_parentesco in (5,6) and df2.cedula=dp.cedula_identidad)::int cantidad_hijos,
+       (select count(cedula) FROM cnmd06_datos_familiares df2 where df2.cod_parentesco in (5,6) and df2.cedula=dp.cedula_identidad and DATE_PART('year', AGE(df2.fecha_nacimiento)) < 12)::int cantidad_hijos_menores,
+       CASE
+            WHEN dp.sexo='F' THEN true
+            ELSE false
+       END AS es_madre,
+       CASE
+            WHEN dp.sexo='M' THEN true
+            ELSE false
+       END AS es_padre,
+       CASE f.condicion_actividad
+            WHEN 1 THEN 'Activo'
+            WHEN 2 THEN 'Permiso no remunerado'
+            WHEN 3 THEN 'Comisión de servicio'
+            WHEN 4 THEN 'Vacaciones'
+            WHEN 5 THEN 'Suspendido'
+            WHEN 6 THEN 'Retirado'
+            WHEN 7 THEN 'Ascenso'
+            WHEN 8 THEN 'Reposo'
+            ELSE 'Desconocido'
+       END AS estatus_actividad,
+       df.nombres_apellidos AS hijo_nombres_apellidos,
+       df.sexo AS hijo_sexo,
+       df.fecha_nacimiento AS hijo_fecha_nacimiento,
+       DATE_PART('year', AGE(df.fecha_nacimiento))::int AS hijo_edad
+  FROM cnmd06_fichas f
+  INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
+  INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
+  INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
+  INNER JOIN cnmd01 as hn on hn.cod_dep=f.cod_dep and hn.cod_tipo_nomina=f.cod_tipo_nomina
+  INNER JOIN cnmd06_datos_familiares df ON df.cedula=dp.cedula_identidad and df.cod_parentesco in (5,6) and DATE_PART('year', AGE(df.fecha_nacimiento)) < 12
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND hn.denominacion_devengado<>'PRESTACIONES' AND ${clasificacionCondition}${cedulaCondition}${useUnified ? " [condition_ext]" : ""}
+  ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad, df.fecha_nacimiento`;
+
+    let query;
+    if (useUnified) {
+      query = await unifiedQuery({ sqlQuery, table: "f." });
+    } else {
+      query = await specificQuery({ sqlQuery, db });
+    }
+    if (query.length > 0) {
+      res.json(query);
+    } else {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+    }
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta", error: error.message });
+  }
+});
+
 router.get("/fichas/consulta/:cedula", async (req, res) => {
   const { cedula } = req.params;
 
