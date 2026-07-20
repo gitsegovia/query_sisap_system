@@ -1445,6 +1445,63 @@ router.get("/sisap/empleado/hijos_menores", async (req, res) => {
   }
 });
 
+router.get("/sisap/empleado/:ci/carga_familiar", async (req, res) => {
+  const { ci } = req.params;
+
+  if (!ci) {
+    res.status(404).send("Cedula requerida");
+    return false;
+  }
+
+  try {
+    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
+    const depCondition = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
+    // mismo criterio de "empleado activo" que usa /sisap/empleado cuando se filtra por cedula
+    const clasificacionCondition = `ct.clasificacion_personal not in (3,4,6,11,12,13,14,15)`;
+
+    const sqlQuery = `SELECT dp.cedula_identidad, f.cod_dep, f.cod_tipo_nomina, f.cod_cargo, f.cod_ficha, f.condicion_actividad
+  FROM cnmd06_fichas f
+  INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
+  INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
+  INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep=f.cod_dep and ct.cod_tipo_nomina=f.cod_tipo_nomina and ct.cod_cargo=f.cod_cargo and ct.cod_ficha=f.cod_ficha
+  INNER JOIN cnmd01 as hn on hn.cod_dep=f.cod_dep and hn.cod_tipo_nomina=f.cod_tipo_nomina
+  WHERE (${depCondition}) AND f.condicion_actividad in (1,3,4,8) AND hn.denominacion_devengado<>'PRESTACIONES' AND ${clasificacionCondition} and f.cedula_identidad=${ci} [condition_ext]
+  ORDER BY f.condicion_actividad LIMIT 1`;
+
+    const query = await identifiedQuery({ sqlQuery, table: "f." });
+
+    let db = null;
+    if (query.result_db1.length > 0) db = 1;
+    else if (query.result_db2.length > 0) db = 2;
+    else if (query.result_db3.length > 0) db = 3;
+    else if (query.result_db4.length > 0) db = 4;
+
+    if (!db) {
+      res.status(404).send({ message: "No existe resultados", error: "" });
+      return false;
+    }
+
+    const sqlQueryFamiliares = `SELECT cedula as cedula_trabajador, cod_parentesco,
+       CASE cod_parentesco
+            WHEN 4 THEN 'Padre'
+            WHEN 3 THEN 'Madre'
+            WHEN 6 THEN 'Hijo'
+            WHEN 5 THEN 'Hija'
+            WHEN 7 THEN 'Esposa'
+            WHEN 8 THEN 'Esposo'
+            ELSE 'Otro'
+       END AS parentesco,
+       nombres_apellidos, numero_cedula as cedula_familiar, sexo, estudiante
+    FROM cnmd06_datos_familiares WHERE cedula=${ci}`;
+    const cargaFamiliar = await specificQuery({ sqlQuery: sqlQueryFamiliares, db });
+
+    res.json(cargaFamiliar);
+    return true;
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta", error: error.message });
+  }
+});
+
 router.get("/fichas/consulta/:cedula", async (req, res) => {
   const { cedula } = req.params;
 
