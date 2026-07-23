@@ -21,7 +21,7 @@ app.use(routes);
 
 //404 Route
 app.use(function (req, res, next) {
-  res.status(404).render("404.", { layout: false });
+  res.status(404).render("404", { layout: false });
 });
 
 app.listen(PORT, () => {
