@@ -4,6 +4,14 @@ import unifiedQuery, { identifiedQuery, specificQuery } from "./sequelizedb";
 const IS_ONLY_LN = false;
 const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046, 1047];
 
+// Tipos de nómina excluidos en las consultas de /sisap/empleado (ajustar solo aquí).
+const NOMINA_TIPOS_EXCLUIDOS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 33, 38, 39, 40, 9, 6];
+const NOMINA_EXCLUIDOS_CONDITION = `f.cod_tipo_nomina not in (${NOMINA_TIPOS_EXCLUIDOS.join(",")})`;
+
+// Departamentos considerados cuando no se filtra por cod_dep (dep=1 aplica el filtro de nómina).
+const DEPS_SIN_COD_DEP = [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046];
+const ALL_DEPS_CONDITION = `(f.cod_dep=1 AND ${NOMINA_EXCLUIDOS_CONDITION}) OR (f.cod_dep in (${DEPS_SIN_COD_DEP.join(",")}))`;
+
 function diffYear(date) {
   const current = new Date();
   const formatted_date = new Date(date);
@@ -1151,11 +1159,8 @@ router.get("/sisap/empleado", async (req, res) => {
   const getConditionAndDB = () => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
 
-    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
-
     if (!cod_dep) {
-      const allDeps = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
-      return { depCondition: allDeps, db: null, cedulaCondition, useUnified: true };
+      return { depCondition: ALL_DEPS_CONDITION, db: null, cedulaCondition, useUnified: true };
     }
 
     let depCondition = "";
@@ -1169,7 +1174,7 @@ router.get("/sisap/empleado", async (req, res) => {
         const base = codDir !== 0
           ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
           : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
-        depCondition = `${base} and ${nominaExcluidos}`;
+        depCondition = `${base} and ${NOMINA_EXCLUIDOS_CONDITION}`;
       }
       db = 1;
     } else {
@@ -1309,11 +1314,8 @@ router.get("/sisap/empleado/hijos_menores", async (req, res) => {
   const getConditionAndDB = () => {
     const cedulaCondition = cedula ? ` and f.cedula_identidad=${cedula}` : "";
 
-    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
-
     if (!cod_dep) {
-      const allDeps = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
-      return { depCondition: allDeps, db: null, cedulaCondition, useUnified: true };
+      return { depCondition: ALL_DEPS_CONDITION, db: null, cedulaCondition, useUnified: true };
     }
 
     let depCondition = "";
@@ -1327,7 +1329,7 @@ router.get("/sisap/empleado/hijos_menores", async (req, res) => {
         const base = codDir !== 0
           ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
           : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
-        depCondition = `${base} and ${nominaExcluidos}`;
+        depCondition = `${base} and ${NOMINA_EXCLUIDOS_CONDITION}`;
       }
       db = 1;
     } else {
@@ -1454,8 +1456,7 @@ router.get("/sisap/empleado/:ci/carga_familiar", async (req, res) => {
   }
 
   try {
-    const nominaExcluidos = `f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6)`;
-    const depCondition = `(f.cod_dep=1 AND ${nominaExcluidos}) OR (f.cod_dep in (1000,1001,1002,1003,1004,1005,1006,1007,1008,1009,1010,1011,1012,1013,1014,1015,1016,1017,1018,1019,1020,1021,1022,1023,1027,1028,1029,1030,1031,1032,1033,1034,1035,1036,1037,1038,1039,1040,1041,1042,1043,1044,1045,1046))`;
+    const depCondition = ALL_DEPS_CONDITION;
     // mismo criterio de "empleado activo" que usa /sisap/empleado cuando se filtra por cedula
     const clasificacionCondition = `ct.clasificacion_personal not in (3,4,6,11,12,13,14,15)`;
 
