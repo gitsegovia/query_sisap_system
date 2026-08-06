@@ -1,5 +1,5 @@
 import express from "express";
-import unifiedQuery, { identifiedQuery, specificQuery } from "./sequelizedb";
+import unifiedQuery, { identifiedQuery, specificQuery, unifiedQueryParallel } from "./sequelizedb";
 
 const IS_ONLY_LN = false;
 const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046, 1047];
@@ -49,8 +49,17 @@ const router = express.Router();
 
 //Routes
 // Listado completo (todas las bases). Debe declararse antes de /fusamiebg/consulta/:cedula?
+// Params: formato=csv | cod_dep=N | dias=N (ventana de vigencia, default 30) |
+//         origen=transaccion|obrero|todos | incluir_familia=true
 router.get("/fusamiebg/consulta/todos", async (req, res) => {
-  const { formato, cod_dep, afiliacion } = req.query;
+  const { formato, cod_dep, dias, origen, incluir_familia } = req.query;
+
+  // La ventana de vigencia se aplica en SQL: no se trae todo el año para descartarlo después.
+  const diasVigencia = dias ? parseInt(dias, 10) : FUSAMIEBG_VALID_DAYS;
+  if (Number.isNaN(diasVigencia) || diasVigencia < 1) {
+    res.status(400).send({ message: "dias inválido", error: "" });
+    return false;
+  }
 
   let depCondition = "";
   if (cod_dep) {
@@ -62,35 +71,52 @@ router.get("/fusamiebg/consulta/todos", async (req, res) => {
     depCondition = ` and f.cod_dep=${codDep}`;
   }
 
+  const conFamilia = incluir_familia === "true";
+  const origenFiltro = origen === "transaccion" || origen === "obrero" ? origen : "todos";
+
   try {
-    const CURRENT_YEAR = new Date().getFullYear();
+    const current = new Date();
+    const desde = new Date(current.getTime() - diasVigencia * 24 * 60 * 60 * 1000);
+    // La ventana puede cruzar el cambio de año (ej: enero mirando pagos de diciembre).
+    const anos = [...new Set([desde.getFullYear(), current.getFullYear()])].join(",");
+    const ventanaCondition = `hn.periodo_desde >= CURRENT_DATE - INTERVAL '${diasVigencia} days'`;
+
+    // Conteos por agregado (un solo scan agrupado), no por subconsulta correlacionada fila a fila.
+    const camposFamilia = conFamilia ? `, COALESCE(hj.cantidad_hijos,0) cantidad_hijos, COALESCE(fm.cantidad_familiares,0) cantidad_familiares` : "";
+    const joinFamilia = conFamilia
+      ? `LEFT JOIN (SELECT cedula, count(*)::int cantidad_hijos FROM cnmd06_datos_hijos GROUP BY cedula) hj ON hj.cedula=f.cedula_identidad
+    LEFT JOIN (SELECT cedula, count(*)::int cantidad_familiares FROM cnmd06_datos_familiares WHERE cod_parentesco in (3,4,5,6,7,8) GROUP BY cedula) fm ON fm.cedula=f.cedula_identidad`
+      : "";
+
     const campos = `f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre,
       f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha,
       f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
-      hn.periodo_desde,
-      (select count(cedula) FROM cnmd06_datos_hijos h where h.cedula=f.cedula_identidad)::int cantidad_hijos,
-      (select count(cedula) FROM cnmd06_datos_familiares df where df.cedula=f.cedula_identidad and df.cod_parentesco in (3,4,5,6,7,8))::int cantidad_familiares`;
+      hn.periodo_desde${camposFamilia}`;
 
-    // Empleados: misma lógica de la consulta individual (transacción 103 del año en curso).
+    // Empleados: misma lógica de la consulta individual (transacción 103), acotada a la ventana de vigencia.
     const sqlQuery = `SELECT DISTINCT ON (f.cedula_identidad) ${campos}
     FROM v_cnmd06_fichas_2 as f
-    FULL OUTER JOIN cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo
-    FULL OUTER JOIN cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano
-    where f.cedula_identidad is not null and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103${depCondition} [condition_ext]
-    order by f.cedula_identidad, hn.periodo_desde DESC NULLS LAST`;
+    INNER JOIN cnmd08_historia_transacciones as t on t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo
+    INNER JOIN cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano
+    ${joinFamilia}
+    where t.ano in (${anos}) and t.cod_transaccion=103 and ${ventanaCondition}${depCondition} [condition_ext]
+    order by f.cedula_identidad, hn.periodo_desde DESC`;
 
     // Obreros: mismo criterio de respaldo que usa la consulta individual cuando no hay transacción.
     const sqlQuery_obrero = `SELECT DISTINCT ON (f.cedula_identidad) ${campos}
     FROM v_cnmd06_fichas_2 as f
-    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo
-    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
-    where f.cedula_identidad is not null and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10)${depCondition} [condition_ext]
-    order by f.cedula_identidad, hn.periodo_desde DESC NULLS LAST`;
+    INNER JOIN cnmd05 as t on t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo
+    INNER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
+    ${joinFamilia}
+    where t.ano in (${anos}) and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10) and ${ventanaCondition}${depCondition} [condition_ext]
+    order by f.cedula_identidad, hn.periodo_desde DESC`;
 
-    const query = await unifiedQuery({ sqlQuery, table: "f." });
-    const query_obrero = await unifiedQuery({ sqlQuery: sqlQuery_obrero, table: "f." });
+    // Las 4 bases y ambos orígenes se consultan en paralelo.
+    const [query, query_obrero] = await Promise.all([
+      origenFiltro === "obrero" ? [] : unifiedQueryParallel({ sqlQuery, table: "f." }),
+      origenFiltro === "transaccion" ? [] : unifiedQueryParallel({ sqlQuery: sqlQuery_obrero, table: "f." }),
+    ]);
 
-    const current = new Date();
     const buildRow = (row, tipo_registro) => {
       const { periodo_desde, ...resto } = row;
       const date = periodo_desde ? new Date(periodo_desde) : null;
@@ -101,7 +127,7 @@ router.get("/fusamiebg/consulta/todos", async (req, res) => {
         tipo_registro,
         fecha_ultimo_pago: date,
         dias_desde_ultimo_pago: dias,
-        afiliacion: dias !== null && dias <= FUSAMIEBG_VALID_DAYS,
+        afiliacion: dias !== null && dias <= diasVigencia,
       };
     };
 
@@ -130,10 +156,7 @@ router.get("/fusamiebg/consulta/todos", async (req, res) => {
     query.forEach((row) => upsert(row, "transaccion"));
     query_obrero.forEach((row) => upsert(row, "obrero"));
 
-    let resultado = [...porCedula.values()];
-    if (afiliacion === "true") resultado = resultado.filter((row) => row.afiliacion);
-    else if (afiliacion === "false") resultado = resultado.filter((row) => !row.afiliacion);
-
+    const resultado = [...porCedula.values()];
     resultado.sort((a, b) => (a.cod_dep - b.cod_dep) || String(a.nombre || "").localeCompare(String(b.nombre || "")));
 
     if (resultado.length > 0) {

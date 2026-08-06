@@ -54,6 +54,24 @@ async function unifiedQuery({ sqlQuery, table = "" }) {
   }
 }
 
+// Igual que unifiedQuery pero lanza las 4 bases en paralelo (para listados pesados).
+export async function unifiedQueryParallel({ sqlQuery, table = "" }) {
+  try {
+    const build = (condition) => sqlQuery.replaceAll("[condition_ext]", condition.replaceAll("cod_dep", `${table}cod_dep`));
+
+    const results = await Promise.all([
+      sequelizeDB1.query(build(CONDITION_DB1)),
+      sequelizeDB2.query(build(CONDITION_DB2)),
+      sequelizeDB3.query(build(CONDITION_DB3)),
+      sequelizeDB4.query(build(CONDITION_DB4)),
+    ]);
+
+    return results.reduce((acc, [rows]) => acc.concat(rows), []);
+  } catch (error) {
+    throw new Error(error);
+  }
+}
+
 export async function identifiedQuery({ sqlQuery, table = "" }) {
   try {
     const [result_db1] = await sequelizeDB1.query(sqlQuery.replace("[condition_ext]", CONDITION_DB1.replace("cod_dep", `${table}cod_dep`)));
