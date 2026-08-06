@@ -25,11 +25,135 @@ function diffYear(date) {
   return year;
 }
 
+// Días de vigencia del último pago para considerar afiliado a fusamiebg.
+const FUSAMIEBG_VALID_DAYS = 30;
+
+function toCsv(rows) {
+  const headers = Object.keys(rows[0]);
+  const escapeCsv = (value) => {
+    if (value === null || value === undefined) return "";
+    if (value instanceof Date) return value.toISOString().slice(0, 10);
+    return `"${String(value).replace(/"/g, '""')}"`;
+  };
+  const lines = [headers.join(";")];
+  rows.forEach((row) => {
+    lines.push(headers.map((h) => escapeCsv(row[h])).join(";"));
+  });
+  // BOM para que Excel reconozca UTF-8 (acentos, ñ)
+  return "\uFEFF" + lines.join("\r\n");
+}
+
 const router = express.Router();
 //Assets
 //router.use('/assets', express.static(path.join(__dirname, '../public/assets')));
 
 //Routes
+// Listado completo (todas las bases). Debe declararse antes de /fusamiebg/consulta/:cedula?
+router.get("/fusamiebg/consulta/todos", async (req, res) => {
+  const { formato, cod_dep, afiliacion } = req.query;
+
+  let depCondition = "";
+  if (cod_dep) {
+    const codDep = parseInt(cod_dep, 10);
+    if (Number.isNaN(codDep)) {
+      res.status(400).send({ message: "cod_dep inválido", error: "" });
+      return false;
+    }
+    depCondition = ` and f.cod_dep=${codDep}`;
+  }
+
+  try {
+    const CURRENT_YEAR = new Date().getFullYear();
+    const campos = `f.cedula_identidad, f.primer_nombre || ' ' || f.segundo_nombre || ' ' || f.primer_apellido || ' ' || f.segundo_apellido as nombre,
+      f.deno_cod_secretaria, f.deno_cod_direccion, f.demonimacion_puesto, f.cod_dep, f.denominacion_dependencia, f.cod_ficha,
+      f.fecha_nacimiento, f.sexo, f.grupo_sanguineo, f.fecha_ingreso, f.direccion_habitacion, f.telefonos_habitacion, f.carnet,
+      hn.periodo_desde,
+      (select count(cedula) FROM cnmd06_datos_hijos h where h.cedula=f.cedula_identidad)::int cantidad_hijos,
+      (select count(cedula) FROM cnmd06_datos_familiares df where df.cedula=f.cedula_identidad and df.cod_parentesco in (3,4,5,6,7,8))::int cantidad_familiares`;
+
+    // Empleados: misma lógica de la consulta individual (transacción 103 del año en curso).
+    const sqlQuery = `SELECT DISTINCT ON (f.cedula_identidad) ${campos}
+    FROM v_cnmd06_fichas_2 as f
+    FULL OUTER JOIN cnmd08_historia_transacciones as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo
+    FULL OUTER JOIN cnmd08_historia_nomina as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina and hn.numero_nomina=t.numero_nomina and hn.ano=t.ano
+    where f.cedula_identidad is not null and t.ano=${CURRENT_YEAR} and t.cod_transaccion=103${depCondition} [condition_ext]
+    order by f.cedula_identidad, hn.periodo_desde DESC NULLS LAST`;
+
+    // Obreros: mismo criterio de respaldo que usa la consulta individual cuando no hay transacción.
+    const sqlQuery_obrero = `SELECT DISTINCT ON (f.cedula_identidad) ${campos}
+    FROM v_cnmd06_fichas_2 as f
+    FULL OUTER JOIN cnmd05 as t on f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo
+    FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina
+    where f.cedula_identidad is not null and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.clasificacion_personal in (2,8,10)${depCondition} [condition_ext]
+    order by f.cedula_identidad, hn.periodo_desde DESC NULLS LAST`;
+
+    const query = await unifiedQuery({ sqlQuery, table: "f." });
+    const query_obrero = await unifiedQuery({ sqlQuery: sqlQuery_obrero, table: "f." });
+
+    const current = new Date();
+    const buildRow = (row, tipo_registro) => {
+      const { periodo_desde, ...resto } = row;
+      const date = periodo_desde ? new Date(periodo_desde) : null;
+      const dias = date ? Math.ceil((current.getTime() - date.getTime()) / (1000 * 3600 * 24)) : null;
+
+      return {
+        ...resto,
+        tipo_registro,
+        fecha_ultimo_pago: date,
+        dias_desde_ultimo_pago: dias,
+        afiliacion: dias !== null && dias <= FUSAMIEBG_VALID_DAYS,
+      };
+    };
+
+    // Una fila por cédula: gana el registro por transacción y, a igual origen, el pago más reciente.
+    const porCedula = new Map();
+    const upsert = (row, tipo_registro) => {
+      const key = String(row.cedula_identidad);
+      const nuevo = buildRow(row, tipo_registro);
+      const actual = porCedula.get(key);
+
+      if (!actual) {
+        porCedula.set(key, nuevo);
+        return;
+      }
+
+      const prioridadActual = actual.tipo_registro === "transaccion" ? 1 : 0;
+      const prioridadNuevo = tipo_registro === "transaccion" ? 1 : 0;
+      const fechaActual = actual.fecha_ultimo_pago ? actual.fecha_ultimo_pago.getTime() : 0;
+      const fechaNueva = nuevo.fecha_ultimo_pago ? nuevo.fecha_ultimo_pago.getTime() : 0;
+
+      if (prioridadNuevo > prioridadActual || (prioridadNuevo === prioridadActual && fechaNueva > fechaActual)) {
+        porCedula.set(key, nuevo);
+      }
+    };
+
+    query.forEach((row) => upsert(row, "transaccion"));
+    query_obrero.forEach((row) => upsert(row, "obrero"));
+
+    let resultado = [...porCedula.values()];
+    if (afiliacion === "true") resultado = resultado.filter((row) => row.afiliacion);
+    else if (afiliacion === "false") resultado = resultado.filter((row) => !row.afiliacion);
+
+    resultado.sort((a, b) => (a.cod_dep - b.cod_dep) || String(a.nombre || "").localeCompare(String(b.nombre || "")));
+
+    if (resultado.length > 0) {
+      if (formato === "csv") {
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", 'attachment; filename="fusamiebg_trabajadores.csv"');
+        res.send(toCsv(resultado));
+      } else {
+        res.json(resultado);
+      }
+      return true;
+    }
+
+    res.status(404).send({ message: "No existe resultados", error: "" });
+    return false;
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta unificada", error: error.message });
+  }
+});
+
 router.get("/fusamiebg/consulta/:cedula?", async (req, res) => {
   const { cedula } = req.params;
 
