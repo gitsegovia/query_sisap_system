@@ -8,6 +8,14 @@ const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 10
 const NOMINA_TIPOS_EXCLUIDOS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 33, 38, 39, 40, 9, 6];
 const NOMINA_EXCLUIDOS_CONDITION = `f.cod_tipo_nomina not in (${NOMINA_TIPOS_EXCLUIDOS.join(",")})`;
 
+// Direcciones que se manejan aparte: XX-00 de estas secretarías (dep=1) no las incluye.
+const SECRETARIA_DIRECCIONES_APARTE = {
+  1: [2, 3, 4, 5],
+  10: [8, 9],
+  13: [2, 3, 4, 5, 8],
+  15: [1, 2, 3, 4, 5, 8, 9],
+};
+
 // Departamentos considerados cuando no se filtra por cod_dep (dep=1 aplica el filtro de nómina).
 const DEPS_SIN_COD_DEP = [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046];
 const ALL_DEPS_CONDITION = `(f.cod_dep=1 AND ${NOMINA_EXCLUIDOS_CONDITION}) OR (f.cod_dep in (${DEPS_SIN_COD_DEP.join(",")}))`;
@@ -603,211 +611,46 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     return false;
   }
 
+  // Clasificación de personal: criterio propio de hoja de vida (se maneja por dependencia).
+  const CLASIFICACION_DEFAULT = `hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+  const CLASIFICACION_SIN_12 = `hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
+  const getClasificacion = () => {
+    if (cod_dep.includes("-")) return CLASIFICACION_DEFAULT;
+    if ([1008, 1021, 1039, 1045, 1046].includes(Number(cod_dep))) return null;
+    if ([1006, 1022, 1040].includes(Number(cod_dep))) return CLASIFICACION_SIN_12;
+    return CLASIFICACION_DEFAULT;
+  };
+
+  // Dependencia y nómina: mismo criterio que /sisap/empleado.
   const getCondition = () => {
+    let depCondition;
     if (cod_dep.includes("-")) {
       const codSplit = cod_dep.split("-");
       if (codSplit.length < 2) {
         return null;
       }
-      if (codSplit[1] != "00") {
-        return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion=${codSplit[1]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+      const codSec = parseInt(codSplit[0], 10);
+      const codDir = parseInt(codSplit[1], 10);
+      const direccionesAparte = SECRETARIA_DIRECCIONES_APARTE[codSec];
+      let base = `f.cod_dep=1 and f.cod_secretaria=${codSec}`;
+      if (codDir !== 0) {
+        base += ` and f.cod_direccion=${codDir}`;
+      } else if (direccionesAparte) {
+        base += ` and f.cod_direccion not in (${direccionesAparte.join(",")})`;
       }
-      if (codSplit[0] == "01") {
-        return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-      }
-      if (codSplit[0] == "10") {
-        return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-      }
-      if (codSplit[0] == "13") {
-        return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (2,3,4,5,8) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-      }
-      if (codSplit[0] == "15") {
-        return IS_ONLY_LN
-          ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-          : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_direccion NOT IN (1,2,3,4,5,8,9) and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-      }
-
-      return IS_ONLY_LN
-        ? `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina in (1,2,3,29) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=1 and f.cod_secretaria=${codSplit[0]} and f.cod_tipo_nomina not in (10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,33,34,35,36,37,38,39,40,9,6) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+      depCondition = `${base} and ${NOMINA_EXCLUIDOS_CONDITION}`;
+    } else {
+      depCondition = `f.cod_dep=${cod_dep}`;
     }
-    if (cod_dep < 1000 || cod_dep == 1024 || cod_dep == 1025) {
-      return null;
-    }
-    if (cod_dep == 1000) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1003) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12,13,14,15,16,17,18,19) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1004) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1005) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9,10) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1006) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8,9,10,11,12) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
-    }
-    if (cod_dep == 1007) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1008) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4,5,7,10)`;
-    }
-    if (cod_dep == 1009) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1010) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,9,10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1011) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1012) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1014) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (3,11,12,13,14) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1015) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (10,11,12,13) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1016) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11,12) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1021) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (2,4,5,6,7)`;
-    }
-    if (cod_dep == 1022) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
-    }
-    if (cod_dep == 1023) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (9,10,11) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1027) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (7,8) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1028) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,5) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9,10) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1035) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1037) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1039) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)` : `f.cod_dep=${cod_dep}`;
-    }
-    if (cod_dep == 1040) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2, 3) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,13,14)`;
-    }
-    if (cod_dep == 1041) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1, 2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina not in (6,7,8,9) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1043) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
-    }
-    if (cod_dep == 1045) {
-      return IS_ONLY_LN
-        ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-        : `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2,4)`;
-    }
-    if (cod_dep == 1046) {
-      return IS_ONLY_LN ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)` : `f.cod_dep=${cod_dep}`;
-    }
-    return IS_ONLY_LN
-      ? `f.cod_dep=${cod_dep} and f.cod_tipo_nomina in (1,2) and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`
-      : `f.cod_dep=${cod_dep} and hn.clasificacion_personal not in (7,8,13,3,4,6,15,9,10,11,12,13,14)`;
+    const clasificacion = getClasificacion();
+    return clasificacion ? `${depCondition} and ${clasificacion}` : depCondition;
   };
 
   const getConditionDB = () => {
-    if (cod_dep.includes("-")) {
-      return 1;
-    }
-    if (cod_dep < 1000) {
-      return 1;
-    }
-    if (
-      cod_dep == 1006 ||
-      cod_dep == 1021 ||
-      cod_dep == 1027 ||
-      cod_dep == 1028 ||
-      cod_dep == 1036 ||
-      cod_dep == 1037 ||
-      cod_dep == 1038 ||
-      cod_dep == 1039 ||
-      cod_dep == 1040 ||
-      cod_dep == 1042 ||
-      cod_dep == 1043 ||
-      cod_dep == 1045 ||
-      cod_dep == 1046
-    ) {
-      return 2;
-    }
-    if (cod_dep == 1035) {
-      return 3;
-    }
-    if (cod_dep == 1041) {
-      return 4;
-    }
+    if (cod_dep.includes("-")) return 1;
+    if (DEP_ENTE.includes(Number(cod_dep))) return 2;
+    if (cod_dep == 1035) return 3;
+    if (cod_dep == 1041) return 4;
     return 1;
   };
 
@@ -854,7 +697,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
     FULL OUTER JOIN cnmd05 as t on f.cod_dep=t.cod_dep and f.cod_ficha=t.cod_ficha and f.cod_cargo=t.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina
     FULL OUTER JOIN cnmd01 as hn on hn.cod_dep=t.cod_dep and hn.cod_tipo_nomina=t.cod_tipo_nomina 
     FULL OUTER JOIN cnmd06_datos_personales as dp on dp.cedula_identidad=f.cedula_identidad 
-    where  ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha=1 and hn.denominacion_devengado<>'PRESTACIONES' [condition_ext] ORDER BY t.cod_tipo_nomina`;
+    where  ${condition_dep} and t.ano=${CURRENT_YEAR} and f.condicion_actividad_ficha in (1,3,4,8) and hn.denominacion_devengado<>'PRESTACIONES' [condition_ext] ORDER BY t.cod_tipo_nomina`;
     /*
 f.cedula_identidad not in(17272487, 3121415,3516898,3953350,4285183,4877107,5008142,5621980,5622394,6345849,6405730,6626232,6626277,6627482,6641554,6940025,7278034,7279615,7292652,7295995,7947144,8173284,8413995,8552594,8570155,8574193,8620863,8621316,8627134,8783227,8783879,8784457,8784657,8786434,8789992,8791843,8798328,8799042,8803322,8803363,8909143,8996101,8999871,9591223,9596950,9875740,9883031,9883515,9886234,9889227,10266922,10269651,10273815,10665103,10667050,10670434,10980752,11053128,11115431,11120282,11237678,11367254,11369489,11757562,11759500,11795566,11796841,11844546,12119137,12322982,12323559,12410854,12512086,12897477,13152298,13153437,13237082,13794978,13860220,14344452,14520381,14538971,14539214,14693507,14871624,14948026,15152257,15248588,15301671,15452027,15452574,15480321,15681918,15710817,16383483,16506971,16511064,16790345,16913325,17272513,17353679,17746355,17936870,18328167,18543178,18543198,18894872,19019256,19067800,19100721,19246030,19405492,19473610,19657990,19724913,19959783,19986482,20184489,20247847,20588884,20876101,21177638,21581339,21658471,23647339,24792900,25419847,27238440,30811163,3167720,6800718,20528474,8630884,11236283,10499354,7291076,16144933,15248175,8790968,10983518,10497643,14294391,12512650,12899227,12475710,9918931,14672586,16506165,17001528,13680322,9874646,8791481,6997740,12117664,8630784,22614807,16383567,22882050,12766040,16504587,11369286,16236363,8558331,18067410,8805348,5072098,11842698,15100091,19759639,10496825,17374212,11368831,18376350,12582770,13482691,14191166,15811760,4345626,8728909,19725594,24678325,82050877,9883003,4545380,27631216,8151814,8556221,10855142,13874018,16075260,16803261,17166165,19222422,19724480,19948836,24976488,2517455,3581077,5153837,5157088,6450664,9889039,9889428,12840505,12841010,2516732,4388634,5430469,6002161,7281697,7294482,8995885,8996437,11116812,14146614,10981600,13571432,20878323,9886484,9888274,11124321,12842961,13622436,14870473,15710663,21147972,3951934,3958684,4284675,4391053,4798843,5157359,7275674,7276672,8554666,8784662,9886011,9888135,10668280,10670925,10671144,11090574,14645308,14870019,16912812,17513856,26081962,27238537,5523033,19725353) and
  */
@@ -1318,9 +1161,13 @@ router.get("/sisap/empleado", async (req, res) => {
       if (codSplit.length >= 2) {
         const codSec = parseInt(codSplit[0], 10);
         const codDir = parseInt(codSplit[1], 10);
-        const base = codDir !== 0
-          ? `ct.cod_dep=1 and ct.cod_secretaria=${codSec} and ct.cod_direccion=${codDir}`
-          : `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+        const direccionesAparte = SECRETARIA_DIRECCIONES_APARTE[codSec];
+        let base = `ct.cod_dep=1 and ct.cod_secretaria=${codSec}`;
+        if (codDir !== 0) {
+          base += ` and ct.cod_direccion=${codDir}`;
+        } else if (direccionesAparte) {
+          base += ` and ct.cod_direccion not in (${direccionesAparte.join(",")})`;
+        }
         depCondition = `${base} and ${NOMINA_EXCLUIDOS_CONDITION}`;
       }
       db = 1;
