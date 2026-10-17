@@ -2,7 +2,7 @@ import express from "express";
 import unifiedQuery, { identifiedQuery, specificQuery, unifiedQueryParallel } from "./sequelizedb";
 
 const IS_ONLY_LN = false;
-const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1040, 1042, 1043, 1045, 1046, 1047];
+const DEP_ENTE = [1006, 1021, 1027, 1028, 1036, 1037, 1038, 1039, 1042, 1043, 1045, 1046, 1047];
 
 // Tipos de nómina excluidos en las consultas de /sisap/empleado (ajustar solo aquí).
 const NOMINA_TIPOS_EXCLUIDOS = [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 33, 38, 39, 40, 9, 6];
