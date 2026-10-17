@@ -18,7 +18,17 @@ const SECRETARIA_DIRECCIONES_APARTE = {
 
 // Departamentos considerados cuando no se filtra por cod_dep (dep=1 aplica el filtro de nómina).
 const DEPS_SIN_COD_DEP = [1000, 1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009, 1010, 1011, 1012, 1013, 1014, 1015, 1016, 1017, 1018, 1019, 1020, 1021, 1022, 1023, 1027, 1028, 1029, 1030, 1031, 1032, 1033, 1034, 1035, 1036, 1037, 1038, 1039, 1040, 1041, 1042, 1043, 1044, 1045, 1046];
-const ALL_DEPS_CONDITION = `(f.cod_dep=1 AND ${NOMINA_EXCLUIDOS_CONDITION}) OR (f.cod_dep in (${DEPS_SIN_COD_DEP.join(",")}))`;
+// TEMPORAL: dependencias que solo incluyen ciertos tipos de nómina (quitar la entrada para revertir).
+const NOMINAS_PERMITIDAS_POR_DEP = {
+  1039: [1, 22, 23],
+};
+const depNominaCondition = (cod_dep) => `f.cod_dep=${cod_dep} AND f.cod_tipo_nomina in (${NOMINAS_PERMITIDAS_POR_DEP[cod_dep].join(",")})`;
+const DEPS_CON_NOMINA_RESTRINGIDA = Object.keys(NOMINAS_PERMITIDAS_POR_DEP).map(Number);
+const ALL_DEPS_CONDITION = [
+  `(f.cod_dep=1 AND ${NOMINA_EXCLUIDOS_CONDITION})`,
+  `(f.cod_dep in (${DEPS_SIN_COD_DEP.filter((d) => !DEPS_CON_NOMINA_RESTRINGIDA.includes(d)).join(",")}))`,
+  ...DEPS_CON_NOMINA_RESTRINGIDA.map((d) => `(${depNominaCondition(d)})`),
+].join(" OR ");
 
 // Consulta de empleados compartida por /sisap/empleado y /hoja_vida/consulta_dep.
 function getEmpleadoDepFilter(cod_dep) {
@@ -45,7 +55,7 @@ function getEmpleadoDepFilter(cod_dep) {
     }
     db = 1;
   } else {
-    depCondition = `f.cod_dep=${cod_dep}`;
+    depCondition = NOMINAS_PERMITIDAS_POR_DEP[Number(cod_dep)] ? depNominaCondition(Number(cod_dep)) : `f.cod_dep=${cod_dep}`;
     if (DEP_ENTE.includes(Number(cod_dep))) db = 2;
     else if (cod_dep == 1035) db = 3;
     else if (cod_dep == 1041) db = 4;
