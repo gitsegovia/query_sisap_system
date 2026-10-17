@@ -61,6 +61,96 @@ function getEmpleadoClasificacionCondition({ tipo, cedula } = {}) {
     : `ct.clasificacion_personal not in (3,4,6,7,8,9,10,11,12,13,14,15)`;
 }
 
+const EMPLEADO_SELECT_SQL = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
+       dp.primer_nombre, dp.segundo_nombre, dp.sexo, dp.fecha_nacimiento, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso, f.funciones_realizar, f.cod_ficha, f.cod_tipo_nomina, hn.denominacion as nomina, f.cod_cargo,
+       CASE
+         WHEN f.cod_dep = 1 THEN COALESCE(
+           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
+           ct.secretaria
+         )
+         ELSE ar.denominacion
+       END AS dependencia,
+       CASE
+         WHEN f.cod_dep = 1 THEN
+           CASE
+             WHEN (ct.cod_secretaria = 1  AND ct.cod_direccion IN (3,5))
+               OR (ct.cod_secretaria = 10 AND ct.cod_direccion IN (8,9))
+               OR (ct.cod_secretaria = 13 AND ct.cod_direccion IN (2,3,4,5,8))
+               OR (ct.cod_secretaria = 15 AND ct.cod_direccion IN (1,2,4,8,9))
+             THEN
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+                    ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+               END
+             ELSE
+               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-00'
+                    ELSE ct.cod_secretaria::text || '-00'
+               END
+           END
+         ELSE f.cod_dep::text
+       END AS cod_dep_formato,
+       ct.secretaria, ct.direccion,
+       ct.cod_estado as cod_estado, ct.cod_municipio as cod_municipio, ct.cod_parroquia as cod_parroquia, ct.cod_centro as cod_centro_poblado,
+       ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
+       dp.direccion_habitacion, dp.telefonos_habitacion,
+       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
+       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad and DATE_PART('year', AGE(df.fecha_nacimiento)) <= 12)::int cantidad_hijos_menores,
+       CASE
+          WHEN (SELECT count(cedula)
+                FROM cnmd06_datos_familiares df
+                WHERE df.cod_parentesco IN (5,6)
+                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='F'
+          THEN true
+          ELSE false
+       END AS es_madre,
+       CASE
+          WHEN (SELECT count(cedula)
+                FROM cnmd06_datos_familiares df
+                WHERE df.cod_parentesco IN (5,6)
+                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='M'
+          THEN true
+          ELSE false
+       END AS es_padre,
+       CASE f.condicion_actividad
+            WHEN 1 THEN 'Activo'
+            WHEN 2 THEN 'Permiso no remunerado'
+            WHEN 3 THEN 'Comisión de servicio'
+            WHEN 4 THEN 'Vacaciones'
+            WHEN 5 THEN 'Suspendido'
+            WHEN 6 THEN 'Retirado'
+            WHEN 7 THEN 'Ascenso'
+            WHEN 8 THEN 'Reposo'
+            ELSE 'Desconocido'
+       END AS estatus_actividad,
+       CASE ct.clasificacion_personal
+            WHEN 2 THEN true
+            WHEN 15 THEN true
+            WHEN 8 THEN true
+            WHEN 10 THEN true
+            ELSE false
+       END AS obreros,
+       CASE ct.clasificacion_personal
+            WHEN 5 THEN true
+            WHEN 16 THEN true
+            ELSE false
+       END AS contratados,
+       CASE
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado <> 99 THEN true
+            ELSE false
+       END AS empleados,
+       CASE
+            WHEN ct.clasificacion_personal IN (17, 18) THEN true
+            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado = 99 THEN true
+            ELSE false
+       END AS personal_ln,
+       CASE ct.clasificacion_personal
+            WHEN 12 THEN true
+            ELSE false
+       END AS comision_servicio,
+       CASE
+            WHEN ct.clasificacion_personal IN (7,8,9,10) THEN true
+            ELSE false
+       END AS pensionado`;
+
 const EMPLEADO_FROM_SQL = `FROM cnmd06_fichas f
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad=f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep=f.cod_dep
@@ -72,6 +162,46 @@ function getEmpleadoWhereSql({ depCondition, clasificacionCondition, cedulaCondi
 }
 
 const EMPLEADO_ORDER_SQL = `ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
+
+// Campos adicionales de hoja de vida (no cambian las filas: solo LEFT JOIN).
+const HOJA_VIDA_EXTRA_SELECT_SQL = `f.cod_dep,
+       concat_ws(' ', dp.primer_nombre, dp.segundo_nombre, dp.primer_apellido, dp.segundo_apellido) AS nombre,
+       fv.cod_secretaria, fv.cod_direccion, fv.deno_cod_division, fv.cod_division, fv.deno_cod_departamento, fv.cod_departamento,
+       CASE
+         WHEN fv.estado_civil='S' THEN 'Soltero'
+         WHEN fv.estado_civil='C' THEN 'Casado'
+         WHEN fv.estado_civil='D' THEN 'Divorciado'
+         ELSE 'Otro'
+       END estado_civil, fv.grupo_sanguineo, fv.correo_electronico, fv.carnet,
+       (select denominacion from cugd01_estados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen) as deno_estado_nacimiento,
+       (select denominacion from cugd01_municipios where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen) as deno_municipio_nacimiento,
+       (select denominacion from cugd01_parroquias where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen) as deno_parroquia_nacimiento,
+       (select denominacion from cugd01_centros_poblados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen and cod_centro=fv.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
+       (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion) as deno_estado_habitacion,
+       (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion) as deno_municipio_habitacion,
+       (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion) as deno_parroquia_habitacion,
+       (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion and cod_centro=fv.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
+       fv.cod_centropoblado_habitacion,
+       (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
+       (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
+       (select devolver_grado_puesto(
+         (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto)) as cod_grado_puesto,
+       hn.denominacion_devengado`;
+
+// Misma consulta para /sisap/empleado y las consultas por dependencia; hojaVida=true solo agrega columnas.
+function buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition = "", useUnified = false, hojaVida = false }) {
+  const CURRENT_YEAR = new Date().getFullYear();
+  const extraSelect = hojaVida ? `,\n       ${HOJA_VIDA_EXTRA_SELECT_SQL}` : "";
+  const extraJoins = hojaVida
+    ? `
+  LEFT JOIN v_cnmd06_fichas_2 as fv ON fv.cod_dep=f.cod_dep and fv.cod_ficha=f.cod_ficha and fv.cod_cargo=f.cod_cargo and fv.cod_tipo_nomina=f.cod_tipo_nomina
+  LEFT JOIN cnmd05 as t ON t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina and t.ano=${CURRENT_YEAR}`
+    : "";
+  return `${EMPLEADO_SELECT_SQL}${extraSelect}
+  ${EMPLEADO_FROM_SQL}${extraJoins}
+  ${getEmpleadoWhereSql({ depCondition, clasificacionCondition, cedulaCondition, useUnified })}
+  ${EMPLEADO_ORDER_SQL}`;
+}
 
 function diffYear(date) {
   const current = new Date();
@@ -669,37 +799,7 @@ router.get("/hoja_vida/consulta_dep/:cod_dep", async (req, res) => {
 
   try {
     const beneficiario = [];
-    const CURRENT_YEAR = new Date().getFullYear();
-    // Mismos filtros y joins que /sisap/empleado; la vista de fichas y cnmd05 solo aportan columnas.
-    const sqlQuery = `SELECT fv.cedula_identidad, fv.primer_nombre || ' ' || fv.segundo_nombre || ' ' || fv.primer_apellido || ' ' || fv.segundo_apellido as nombre, 
-    fv.deno_cod_secretaria, fv.cod_secretaria, fv.deno_cod_direccion, fv.cod_direccion, fv.deno_cod_division, fv.cod_division, fv.deno_cod_departamento, fv.cod_departamento, fv.demonimacion_puesto, fv.cod_dep, fv.denominacion_dependencia, fv.cod_ficha, fv.fecha_nacimiento, fv.sexo, CASE 
-            WHEN fv.estado_civil='S' THEN 'Soltero' 
-            WHEN fv.estado_civil='C' THEN 'Casado' 
-            WHEN fv.estado_civil='D' THEN 'Divorciado' 
-            ELSE 'Otro'
-          END estado_civil, fv.grupo_sanguineo, 
-    fv.correo_electronico,
-    fv.deno_cod_estado, fv.deno_cod_municipio, fv.deno_cod_parroquia, fv.deno_cod_centro, fv.deno_ciudad,    
-    (select denominacion from cugd01_estados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen) as deno_estado_nacimiento,    
-    (select denominacion from cugd01_municipios where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen) as deno_municipio_nacimiento,    
-    (select denominacion from cugd01_parroquias where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen) as deno_parroquia_nacimiento,
-    (select denominacion from cugd01_centros_poblados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen and cod_centro=fv.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
-    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion) as deno_estado_habitacion,    
-    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion) as deno_municipio_habitacion,    
-    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion) as deno_parroquia_habitacion,    
-    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion and cod_centro=fv.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
-    fv.cod_centropoblado_habitacion,
-    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
-    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
-    fv.fecha_ingreso, fv.direccion_habitacion, fv.telefonos_habitacion, fv.carnet,
-    (select devolver_grado_puesto(
-      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto,
-      hn.cod_tipo_nomina, hn.denominacion, hn.denominacion_devengado
-    ${EMPLEADO_FROM_SQL}
-    LEFT JOIN v_cnmd06_fichas_2 as fv on fv.cod_dep=f.cod_dep and fv.cod_ficha=f.cod_ficha and fv.cod_cargo=f.cod_cargo and fv.cod_tipo_nomina=f.cod_tipo_nomina
-    LEFT JOIN cnmd05 as t on t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina and t.ano=${CURRENT_YEAR}
-    ${getEmpleadoWhereSql({ depCondition, clasificacionCondition, useUnified })}
-    ${EMPLEADO_ORDER_SQL}`;
+    const sqlQuery = buildEmpleadoSql({ depCondition, clasificacionCondition, useUnified, hojaVida: true });
     /*
 f.cedula_identidad not in(17272487, 3121415,3516898,3953350,4285183,4877107,5008142,5621980,5622394,6345849,6405730,6626232,6626277,6627482,6641554,6940025,7278034,7279615,7292652,7295995,7947144,8173284,8413995,8552594,8570155,8574193,8620863,8621316,8627134,8783227,8783879,8784457,8784657,8786434,8789992,8791843,8798328,8799042,8803322,8803363,8909143,8996101,8999871,9591223,9596950,9875740,9883031,9883515,9886234,9889227,10266922,10269651,10273815,10665103,10667050,10670434,10980752,11053128,11115431,11120282,11237678,11367254,11369489,11757562,11759500,11795566,11796841,11844546,12119137,12322982,12323559,12410854,12512086,12897477,13152298,13153437,13237082,13794978,13860220,14344452,14520381,14538971,14539214,14693507,14871624,14948026,15152257,15248588,15301671,15452027,15452574,15480321,15681918,15710817,16383483,16506971,16511064,16790345,16913325,17272513,17353679,17746355,17936870,18328167,18543178,18543198,18894872,19019256,19067800,19100721,19246030,19405492,19473610,19657990,19724913,19959783,19986482,20184489,20247847,20588884,20876101,21177638,21581339,21658471,23647339,24792900,25419847,27238440,30811163,3167720,6800718,20528474,8630884,11236283,10499354,7291076,16144933,15248175,8790968,10983518,10497643,14294391,12512650,12899227,12475710,9918931,14672586,16506165,17001528,13680322,9874646,8791481,6997740,12117664,8630784,22614807,16383567,22882050,12766040,16504587,11369286,16236363,8558331,18067410,8805348,5072098,11842698,15100091,19759639,10496825,17374212,11368831,18376350,12582770,13482691,14191166,15811760,4345626,8728909,19725594,24678325,82050877,9883003,4545380,27631216,8151814,8556221,10855142,13874018,16075260,16803261,17166165,19222422,19724480,19948836,24976488,2517455,3581077,5153837,5157088,6450664,9889039,9889428,12840505,12841010,2516732,4388634,5430469,6002161,7281697,7294482,8995885,8996437,11116812,14146614,10981600,13571432,20878323,9886484,9888274,11124321,12842961,13622436,14870473,15710663,21147972,3951934,3958684,4284675,4391053,4798843,5157359,7275674,7276672,8554666,8784662,9886011,9888135,10668280,10670925,10671144,11090574,14645308,14870019,16912812,17513856,26081962,27238537,5523033,19725353) and
  */
@@ -1153,98 +1253,7 @@ router.get("/sisap/empleado", async (req, res) => {
   const clasificacionCondition = getEmpleadoClasificacionCondition({ tipo, cedula });
 
   try {
-    const sqlQuery = `SELECT dp.cedula_identidad, dp.nacionalidad, dp.primer_apellido, dp.segundo_apellido,
-       dp.primer_nombre, dp.segundo_nombre, dp.sexo, dp.fecha_nacimiento, ct.denominacion_clase as cargo, ct.puesto_grado as grado, f.fecha_ingreso, f.funciones_realizar, f.cod_ficha, f.cod_tipo_nomina, hn.denominacion as nomina, f.cod_cargo,
-       CASE
-         WHEN f.cod_dep = 1 THEN COALESCE(
-           (SELECT d.denominacion FROM cugd02_direccion d WHERE d.cod_dependencia=1 AND d.cod_coordinacion=1 AND d.cod_secretaria=ct.cod_secretaria AND d.cod_direccion=ct.cod_direccion LIMIT 1),
-           ct.secretaria
-         )
-         ELSE ar.denominacion
-       END AS dependencia,
-       CASE
-         WHEN f.cod_dep = 1 THEN
-           CASE
-             WHEN (ct.cod_secretaria = 1  AND ct.cod_direccion IN (3,5))
-               OR (ct.cod_secretaria = 10 AND ct.cod_direccion IN (8,9))
-               OR (ct.cod_secretaria = 13 AND ct.cod_direccion IN (2,3,4,5,8))
-               OR (ct.cod_secretaria = 15 AND ct.cod_direccion IN (1,2,4,8,9))
-             THEN
-               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
-                    ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
-               END
-             ELSE
-               CASE WHEN ct.cod_secretaria::int < 10 THEN '0' || ct.cod_secretaria::text || '-00'
-                    ELSE ct.cod_secretaria::text || '-00'
-               END
-           END
-         ELSE f.cod_dep::text
-       END AS cod_dep_formato,
-       ct.secretaria, ct.direccion,
-       ct.cod_estado as cod_estado, ct.cod_municipio as cod_municipio, ct.cod_parroquia as cod_parroquia, ct.cod_centro as cod_centro_poblado,
-       ct.deno_estado as estado, ct.deno_municipio as municipio, ct.deno_parroquia as parroquia, ct.deno_centro as centro_poblado,
-       dp.direccion_habitacion, dp.telefonos_habitacion,
-       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad)::int cantidad_hijos,
-       (select count(cedula) FROM cnmd06_datos_familiares df where df.cod_parentesco in (5,6) and df.cedula=dp.cedula_identidad and DATE_PART('year', AGE(df.fecha_nacimiento)) <= 12)::int cantidad_hijos_menores,
-       CASE
-          WHEN (SELECT count(cedula)
-                FROM cnmd06_datos_familiares df
-                WHERE df.cod_parentesco IN (5,6)
-                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='F'
-          THEN true
-          ELSE false
-       END AS es_madre,
-       CASE
-          WHEN (SELECT count(cedula)
-                FROM cnmd06_datos_familiares df
-                WHERE df.cod_parentesco IN (5,6)
-                  AND df.cedula = dp.cedula_identidad) > 0 AND dp.sexo='M'
-          THEN true
-          ELSE false
-       END AS es_padre,
-       CASE f.condicion_actividad
-            WHEN 1 THEN 'Activo'
-            WHEN 2 THEN 'Permiso no remunerado'
-            WHEN 3 THEN 'Comisión de servicio'
-            WHEN 4 THEN 'Vacaciones'
-            WHEN 5 THEN 'Suspendido'
-            WHEN 6 THEN 'Retirado'
-            WHEN 7 THEN 'Ascenso'
-            WHEN 8 THEN 'Reposo'
-            ELSE 'Desconocido'
-       END AS estatus_actividad,
-       CASE ct.clasificacion_personal
-            WHEN 2 THEN true
-            WHEN 15 THEN true
-            WHEN 8 THEN true
-            WHEN 10 THEN true
-            ELSE false
-       END AS obreros,
-       CASE ct.clasificacion_personal
-            WHEN 5 THEN true
-            WHEN 16 THEN true
-            ELSE false
-       END AS contratados,
-       CASE
-            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado <> 99 THEN true
-            ELSE false
-       END AS empleados,
-       CASE
-            WHEN ct.clasificacion_personal IN (17, 18) THEN true
-            WHEN ct.clasificacion_personal = 1 AND ct.puesto_grado = 99 THEN true
-            ELSE false
-       END AS personal_ln,
-       CASE ct.clasificacion_personal
-            WHEN 12 THEN true
-            ELSE false
-       END AS comision_servicio,
-       CASE
-            WHEN ct.clasificacion_personal IN (7,8,9,10) THEN true
-            ELSE false
-       END AS pensionado
-  ${EMPLEADO_FROM_SQL}
-  ${getEmpleadoWhereSql({ depCondition, clasificacionCondition, cedulaCondition, useUnified })}
-  ${EMPLEADO_ORDER_SQL}`;
+    const sqlQuery = buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition, useUnified });
 
     let query;
     if (useUnified) {
@@ -1786,37 +1795,7 @@ router.get("/sisap/consulta_dep/:cod_dep", async (req, res) => {
 
   try {
     const beneficiario = [];
-    const CURRENT_YEAR = new Date().getFullYear();
-    // Mismos filtros y joins que /sisap/empleado; la vista de fichas y cnmd05 solo aportan columnas.
-    const sqlQuery = `SELECT fv.cedula_identidad, fv.primer_nombre || ' ' || fv.segundo_nombre || ' ' || fv.primer_apellido || ' ' || fv.segundo_apellido as nombre, 
-    fv.deno_cod_secretaria, fv.cod_secretaria, fv.deno_cod_direccion, fv.cod_direccion, fv.deno_cod_division, fv.cod_division, fv.deno_cod_departamento, fv.cod_departamento, fv.demonimacion_puesto, fv.cod_dep, fv.denominacion_dependencia, fv.cod_ficha, fv.fecha_nacimiento, fv.sexo, CASE 
-            WHEN fv.estado_civil='S' THEN 'Soltero' 
-            WHEN fv.estado_civil='C' THEN 'Casado' 
-            WHEN fv.estado_civil='D' THEN 'Divorciado' 
-            ELSE 'Otro'
-          END estado_civil, fv.grupo_sanguineo, 
-    fv.correo_electronico,
-    fv.deno_cod_estado, fv.deno_cod_municipio, fv.deno_cod_parroquia, fv.deno_cod_centro, fv.deno_ciudad,    
-    (select denominacion from cugd01_estados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen) as deno_estado_nacimiento,    
-    (select denominacion from cugd01_municipios where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen) as deno_municipio_nacimiento,    
-    (select denominacion from cugd01_parroquias where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen) as deno_parroquia_nacimiento,
-    (select denominacion from cugd01_centros_poblados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen and cod_centro=fv.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
-    (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion) as deno_estado_habitacion,    
-    (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion) as deno_municipio_habitacion,    
-    (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion) as deno_parroquia_habitacion,    
-    (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion and cod_centro=fv.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
-    fv.cod_centropoblado_habitacion,
-    (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
-    (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
-    fv.fecha_ingreso, fv.direccion_habitacion, fv.telefonos_habitacion, fv.carnet,
-    (select devolver_grado_puesto(
-      (select xy.clasificacion_personal from cnmd01 xy where xy.cod_dep=t.cod_dep and xy.cod_tipo_nomina=t.cod_tipo_nomina), t.cod_puesto) )as cod_grado_puesto,
-      hn.cod_tipo_nomina, hn.denominacion, hn.denominacion_devengado
-    ${EMPLEADO_FROM_SQL}
-    LEFT JOIN v_cnmd06_fichas_2 as fv on fv.cod_dep=f.cod_dep and fv.cod_ficha=f.cod_ficha and fv.cod_cargo=f.cod_cargo and fv.cod_tipo_nomina=f.cod_tipo_nomina
-    LEFT JOIN cnmd05 as t on t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina and t.ano=${CURRENT_YEAR}
-    ${getEmpleadoWhereSql({ depCondition, clasificacionCondition, useUnified })}
-    ${EMPLEADO_ORDER_SQL}`;
+    const sqlQuery = buildEmpleadoSql({ depCondition, clasificacionCondition, useUnified, hojaVida: true });
     const query = await specificQuery({ sqlQuery, db });
     if (query.length > 0) {
       query.map((emp) => {
