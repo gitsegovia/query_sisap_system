@@ -165,7 +165,7 @@ const EMPLEADO_ORDER_SQL = `ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tip
 
 // Campos adicionales de hoja de vida (no cambian las filas: solo LEFT JOIN).
 const HOJA_VIDA_EXTRA_SELECT_SQL = `f.cod_dep,
-       concat_ws(' ', dp.primer_nombre, dp.segundo_nombre, dp.primer_apellido, dp.segundo_apellido) AS nombre,
+       trim(regexp_replace(coalesce(dp.primer_nombre,'') || ' ' || coalesce(dp.segundo_nombre,'') || ' ' || coalesce(dp.primer_apellido,'') || ' ' || coalesce(dp.segundo_apellido,''), ' +', ' ', 'g')) AS nombre,
        fv.cod_secretaria, fv.cod_direccion, fv.deno_cod_division, fv.cod_division, fv.deno_cod_departamento, fv.cod_departamento,
        CASE
          WHEN fv.estado_civil='S' THEN 'Soltero'
