@@ -173,25 +173,25 @@ function getEmpleadoWhereSql({ depCondition, clasificacionCondition, cedulaCondi
 
 const EMPLEADO_ORDER_SQL = `ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina, f.cedula_identidad`;
 
-// Campos adicionales de hoja de vida (no cambian las filas: solo LEFT JOIN).
+// Campos adicionales de hoja de vida (no cambian las filas: solo LEFT JOIN a cnmd05 del año).
 const HOJA_VIDA_EXTRA_SELECT_SQL = `f.cod_dep,
        trim(regexp_replace(coalesce(dp.primer_nombre,'') || ' ' || coalesce(dp.segundo_nombre,'') || ' ' || coalesce(dp.primer_apellido,'') || ' ' || coalesce(dp.segundo_apellido,''), ' +', ' ', 'g')) AS nombre,
-       fv.cod_secretaria, fv.cod_direccion, fv.deno_cod_division, fv.cod_division, fv.deno_cod_departamento, fv.cod_departamento,
+       t.cod_secretaria, t.cod_direccion, (SELECT xe.denominacion FROM cugd02_division xe WHERE xe.cod_tipo_institucion = t.cod_tipo_inst AND xe.cod_institucion = t.cod_inst AND xe.cod_dependencia = t.cod_dep AND xe.cod_dir_superior = t.cod_dir_superior AND xe.cod_coordinacion = t.cod_coordinacion AND xe.cod_secretaria = t.cod_secretaria AND xe.cod_direccion = t.cod_direccion AND xe.cod_division = t.cod_division GROUP BY xe.denominacion) AS deno_cod_division, t.cod_division, (SELECT xf.denominacion FROM cugd02_departamento xf WHERE xf.cod_tipo_institucion = t.cod_tipo_inst AND xf.cod_institucion = t.cod_inst AND xf.cod_dependencia = t.cod_dep AND xf.cod_dir_superior = t.cod_dir_superior AND xf.cod_coordinacion = t.cod_coordinacion AND xf.cod_secretaria = t.cod_secretaria AND xf.cod_direccion = t.cod_direccion AND xf.cod_division = t.cod_division AND xf.cod_departamento = t.cod_departamento GROUP BY xf.denominacion) AS deno_cod_departamento, t.cod_departamento,
        CASE
-         WHEN fv.estado_civil='S' THEN 'Soltero'
-         WHEN fv.estado_civil='C' THEN 'Casado'
-         WHEN fv.estado_civil='D' THEN 'Divorciado'
+         WHEN dp.estado_civil='S' THEN 'Soltero'
+         WHEN dp.estado_civil='C' THEN 'Casado'
+         WHEN dp.estado_civil='D' THEN 'Divorciado'
          ELSE 'Otro'
-       END estado_civil, fv.grupo_sanguineo, fv.correo_electronico, fv.carnet,
-       (select denominacion from cugd01_estados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen) as deno_estado_nacimiento,
-       (select denominacion from cugd01_municipios where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen) as deno_municipio_nacimiento,
-       (select denominacion from cugd01_parroquias where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen) as deno_parroquia_nacimiento,
-       (select denominacion from cugd01_centros_poblados where cod_republica=fv.cod_pais_origen and cod_estado=fv.cod_estado_origen and cod_municipio=fv.cod_municipio_origen and cod_parroquia=fv.cod_parroquia_origen and cod_centro=fv.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
-       (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion) as deno_estado_habitacion,
-       (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion) as deno_municipio_habitacion,
-       (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion) as deno_parroquia_habitacion,
-       (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=fv.cod_estado_habitacion and cod_municipio=fv.cod_municipio_habitacion and cod_parroquia=fv.cod_parroquia_habitacion and cod_centro=fv.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
-       fv.cod_centropoblado_habitacion,
+       END estado_civil, dp.grupo_sanguineo, dp.correo_electronico, dp.carnet,
+       (select denominacion from cugd01_estados where cod_republica=dp.cod_pais_origen and cod_estado=dp.cod_estado_origen) as deno_estado_nacimiento,
+       (select denominacion from cugd01_municipios where cod_republica=dp.cod_pais_origen and cod_estado=dp.cod_estado_origen and cod_municipio=dp.cod_municipio_origen) as deno_municipio_nacimiento,
+       (select denominacion from cugd01_parroquias where cod_republica=dp.cod_pais_origen and cod_estado=dp.cod_estado_origen and cod_municipio=dp.cod_municipio_origen and cod_parroquia=dp.cod_parroquia_origen) as deno_parroquia_nacimiento,
+       (select denominacion from cugd01_centros_poblados where cod_republica=dp.cod_pais_origen and cod_estado=dp.cod_estado_origen and cod_municipio=dp.cod_municipio_origen and cod_parroquia=dp.cod_parroquia_origen and cod_centro=dp.cod_centropoblado_origen) as deno_centropoblado_nacimiento,
+       (select denominacion from cugd01_estados where cod_republica=1 and cod_estado=dp.cod_estado_habitacion) as deno_estado_habitacion,
+       (select denominacion from cugd01_municipios where cod_republica=1 and cod_estado=dp.cod_estado_habitacion and cod_municipio=dp.cod_municipio_habitacion) as deno_municipio_habitacion,
+       (select denominacion from cugd01_parroquias where cod_republica=1 and cod_estado=dp.cod_estado_habitacion and cod_municipio=dp.cod_municipio_habitacion and cod_parroquia=dp.cod_parroquia_habitacion) as deno_parroquia_habitacion,
+       (select denominacion from cugd01_centros_poblados where cod_republica=1 and cod_estado=dp.cod_estado_habitacion and cod_municipio=dp.cod_municipio_habitacion and cod_parroquia=dp.cod_parroquia_habitacion and cod_centro=dp.cod_centropoblado_habitacion) as deno_contropoblado_habitacion,
+       dp.cod_centropoblado_habitacion,
        (select denominacion from cnmd06_profesiones where cod_profesion=dp.cod_profesion) as profesion,
        (select denominacion from cnmd06_especialidades where cod_profesion=dp.cod_profesion and cod_especialidad=dp.cod_especialidad) as especialidad,
        (select devolver_grado_puesto(
@@ -204,7 +204,6 @@ function buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaConditio
   const extraSelect = hojaVida ? `,\n       ${HOJA_VIDA_EXTRA_SELECT_SQL}` : "";
   const extraJoins = hojaVida
     ? `
-  LEFT JOIN v_cnmd06_fichas_2 as fv ON fv.cod_dep=f.cod_dep and fv.cod_ficha=f.cod_ficha and fv.cod_cargo=f.cod_cargo and fv.cod_tipo_nomina=f.cod_tipo_nomina
   LEFT JOIN cnmd05 as t ON t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina and t.ano=${CURRENT_YEAR}`
     : "";
   return `${EMPLEADO_SELECT_SQL}${extraSelect}
