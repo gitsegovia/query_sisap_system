@@ -205,9 +205,10 @@ const HOJA_VIDA_EXTRA_SELECT_SQL = `f.cod_dep,
        hn.denominacion_devengado`;
 
 // Misma consulta para /sisap/empleado y las consultas por dependencia; hojaVida=true solo agrega columnas.
-function buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition = "", useUnified = false, hojaVida = false }) {
+function buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition = "", useUnified = false, hojaVida = false, incluirClasificacion = false }) {
   const CURRENT_YEAR = new Date().getFullYear();
-  const extraSelect = hojaVida ? `,\n       ${HOJA_VIDA_EXTRA_SELECT_SQL}` : "";
+  const clasificacionSelect = incluirClasificacion ? `,\n       ct.clasificacion_personal` : "";
+  const extraSelect = (hojaVida ? `,\n       ${HOJA_VIDA_EXTRA_SELECT_SQL}` : "") + clasificacionSelect;
   const extraJoins = hojaVida
     ? `
   LEFT JOIN cnmd05 as t ON t.cod_dep=f.cod_dep and t.cod_ficha=f.cod_ficha and t.cod_cargo=f.cod_cargo and t.cod_tipo_nomina=f.cod_tipo_nomina and t.ano=${CURRENT_YEAR}`
@@ -1268,7 +1269,7 @@ router.get("/sisap/empleado", async (req, res) => {
   const clasificacionCondition = getEmpleadoClasificacionCondition({ tipo, cedula });
 
   try {
-    const sqlQuery = buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition, useUnified });
+    const sqlQuery = buildEmpleadoSql({ depCondition, clasificacionCondition, cedulaCondition, useUnified, incluirClasificacion: true });
 
     let query;
     if (useUnified) {
