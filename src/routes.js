@@ -1568,7 +1568,7 @@ router.get("/sisap/jornadas", async (req, res) => {
   FROM cnmd06_fichas f
   INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad = f.cedula_identidad
   INNER JOIN arrd05 ar ON ar.cod_dep = f.cod_dep
-  INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep = f.cod_dep
+  INNER JOIN cnmd05 ct ON ct.cod_dep = f.cod_dep
     AND ct.cod_tipo_nomina = f.cod_tipo_nomina
     AND ct.cod_cargo = f.cod_cargo
     AND ct.cod_ficha = f.cod_ficha
