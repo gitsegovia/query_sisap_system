@@ -1500,6 +1500,96 @@ router.get("/sisap/empleado/:ci/carga_familiar", async (req, res) => {
   }
 });
 
+router.get("/sisap/jornadas", async (req, res) => {
+  const { cedula } = req.query;
+
+  if (!cedula) {
+    res.status(400).send({ message: "Cédula requerida", error: "" });
+    return false;
+  }
+
+  const cedulaNum = Number(cedula);
+  if (!Number.isInteger(cedulaNum) || cedulaNum <= 0) {
+    res.status(400).send({ message: "Cédula inválida", error: "" });
+    return false;
+  }
+
+  try {
+    const sqlQuery = `SELECT dp.cedula_identidad,
+       dp.nacionalidad,
+       dp.primer_apellido,
+       dp.segundo_apellido,
+       dp.primer_nombre,
+       dp.segundo_nombre,
+       dp.sexo,
+       dp.fecha_nacimiento,
+       dp.direccion_habitacion,
+       dp.telefonos_habitacion,
+       f.cod_tipo_nomina,
+       hn.denominacion AS nomina,
+       CASE
+         WHEN f.cod_dep = 1 THEN COALESCE(
+           (SELECT d.denominacion
+            FROM cugd02_direccion d
+            WHERE d.cod_dependencia = 1
+              AND d.cod_coordinacion = 1
+              AND d.cod_secretaria = ct.cod_secretaria
+              AND d.cod_direccion = ct.cod_direccion
+            LIMIT 1),
+           ct.secretaria
+         )
+         ELSE ar.denominacion
+       END AS dependencia,
+       CASE
+         WHEN f.cod_dep = 1 THEN
+           CASE
+             WHEN (ct.cod_secretaria = 1  AND ct.cod_direccion IN (3,5))
+               OR (ct.cod_secretaria = 10 AND ct.cod_direccion IN (8,9))
+               OR (ct.cod_secretaria = 13 AND ct.cod_direccion IN (2,3,4,5,8))
+               OR (ct.cod_secretaria = 15 AND ct.cod_direccion IN (1,2,4,8,9))
+             THEN
+               CASE WHEN ct.cod_secretaria::int < 10
+                 THEN '0' || ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+                 ELSE ct.cod_secretaria::text || '-' || ct.cod_direccion::text
+               END
+             ELSE
+               CASE WHEN ct.cod_secretaria::int < 10
+                 THEN '0' || ct.cod_secretaria::text || '-00'
+                 ELSE ct.cod_secretaria::text || '-00'
+               END
+           END
+         ELSE f.cod_dep::text
+       END AS cod_dep_formato
+  FROM cnmd06_fichas f
+  INNER JOIN cnmd06_datos_personales dp ON dp.cedula_identidad = f.cedula_identidad
+  INNER JOIN arrd05 ar ON ar.cod_dep = f.cod_dep
+  INNER JOIN v_cnmd05_cargos_grado_todo ct ON ct.cod_dep = f.cod_dep
+    AND ct.cod_tipo_nomina = f.cod_tipo_nomina
+    AND ct.cod_cargo = f.cod_cargo
+    AND ct.cod_ficha = f.cod_ficha
+  INNER JOIN cnmd01 hn ON hn.cod_dep = f.cod_dep
+    AND hn.cod_tipo_nomina = f.cod_tipo_nomina
+  WHERE f.cedula_identidad = ${cedulaNum}
+    AND ${NOMINA_EXCLUIDOS_CONDITION}
+    AND f.condicion_actividad IN (1,3,4,8)
+    AND hn.denominacion_devengado <> 'PRESTACIONES'
+    [condition_ext]
+  ORDER BY f.condicion_actividad, f.cod_dep, f.cod_tipo_nomina`;
+
+    const query = await unifiedQuery({ sqlQuery, table: "f." });
+
+    if (query.length > 0) {
+      res.json(query);
+      return true;
+    }
+
+    res.status(404).send({ message: "No existe resultados", error: "" });
+    return false;
+  } catch (error) {
+    res.status(500).send({ message: "Error en la consulta", error: error.message });
+  }
+});
+
 router.get("/fichas/consulta/:cedula", async (req, res) => {
   const { cedula } = req.params;
 
