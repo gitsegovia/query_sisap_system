@@ -1536,7 +1536,12 @@ router.get("/sisap/jornadas", async (req, res) => {
               AND d.cod_secretaria = ct.cod_secretaria
               AND d.cod_direccion = ct.cod_direccion
             LIMIT 1),
-           ct.secretaria
+           (SELECT d.denominacion
+            FROM cugd02_secretaria d
+            WHERE d.cod_dependencia = 1
+              AND d.cod_coordinacion = 1
+              AND d.cod_secretaria = ct.cod_secretaria
+            LIMIT 1) 
          )
          ELSE ar.denominacion
        END AS dependencia,
@@ -1570,7 +1575,6 @@ router.get("/sisap/jornadas", async (req, res) => {
   INNER JOIN cnmd01 hn ON hn.cod_dep = f.cod_dep
     AND hn.cod_tipo_nomina = f.cod_tipo_nomina
   WHERE f.cedula_identidad = ${cedulaNum}
-    AND ${NOMINA_EXCLUIDOS_CONDITION}
     AND f.condicion_actividad IN (1,3,4,8)
     AND hn.denominacion_devengado <> 'PRESTACIONES'
     [condition_ext]
